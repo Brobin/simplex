@@ -45,35 +45,35 @@ namespace RaikesSimplexService.DataModel
         public void AddGoal(string description, GoalKind goalKind, String equation)
         {
             String[] parts1 = equation.Split('=');
-            String[] parts2 = Regex.Split(parts1[0], @"(?<=[+-])");
-            double[] coefficients = new double[parts2[0].Length];
+            String[] parts2 = Regex.Split(parts1[0], @"(?=[+-])");
+            List<String> nonEmpty = new List<String>();
+            foreach (string p in parts2)
+            {
+                if (p != "")
+                {
+                    nonEmpty.Add(p);
+                }
+            }
+            double[] coefficients = new double[nonEmpty.Count];
             int x = 0;
-            foreach(String part in parts2)
+            foreach (String part in nonEmpty)
             {
                 String coeff = "";
-                if(part.Substring(0,1).Equals("-")){
-                    coeff = "-";
-                }
-                coeff += Regex.Replace(part,"[^0-9.]","");
-                System.Diagnostics.Debug.WriteLine(coeff);
+                coeff += Regex.Replace(part, "[^0-9.-]", "");
                 coefficients[x] = Convert.ToDouble(coeff);
                 x++;
             }
             this.GoalKind = goalKind;
             double term = Convert.ToDouble(parts1[1]);
-            Goal finalGoal = new Goal(){ Description = description, Coefficients = coefficients, ConstantTerm = term};
+            Goal finalGoal = new Goal() { Description = description, Coefficients = coefficients, ConstantTerm = term };
             this.Goal = finalGoal;
 
         }
 
         public override string ToString()
         {
-            string myString = "";
-            foreach (int x in this.Goal.Coefficients)
-            {
-                myString += x.ToString() + " ";
-                System.Diagnostics.Debug.WriteLine(myString);
-            }
+            String myString = "Model:\t\tX\tY\r\n";
+            myString += this.GoalKind + "\t" + this.Goal.ToString();
             return myString;
         }
     }

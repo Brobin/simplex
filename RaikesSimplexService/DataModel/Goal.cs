@@ -25,5 +25,16 @@ namespace RaikesSimplexService.DataModel
         /// </summary>
         [DataMember]
         public double ConstantTerm { get; set; }
+
+        public override string ToString()
+        {
+            string myString = "";
+            foreach (double x in this.Coefficients)
+            {
+                myString += x.ToString() + "\t";
+            }
+            myString += "\t = " + this.ConstantTerm.ToString();
+            return myString;
+        }
     }
 }
