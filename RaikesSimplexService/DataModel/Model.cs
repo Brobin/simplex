@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
+using RaikesSimplexService.DataModel;
 
 
 namespace RaikesSimplexService.DataModel
@@ -39,7 +40,34 @@ namespace RaikesSimplexService.DataModel
 
         public void AddConstraints(string name, params string[] inequalities)
         {
-
+            for (int i = 0; i < inequalities.Length; i++) {
+                string[] parts1 = inequalities[i].Split('=');
+                String[] parts2 = Regex.Split(parts1[0], @"(?=[+-])");
+                double[] coefficients = new double[parts2.Length];
+                int x = 0;
+                foreach (String part in parts2)
+                {
+                    String coeff = "";
+                    if (part.Substring(0, 1).Equals("-"))
+                    {
+                        coeff = "-";
+                    }
+                    coeff += Regex.Replace(part, "[^0-9.]", "");
+                    System.Diagnostics.Debug.WriteLine(coeff);
+                    coefficients[x] = Convert.ToDouble(coeff);
+                    x++;
+                }
+                double term = Convert.ToDouble(parts1[1]);
+                Relationship relationship;
+                if (parts2[parts2.Length-1].Contains("<")) {
+                    relationship = Relationship.LessThanOrEquals;
+                } else if (parts2[parts2.Length-1].Contains(">")) { 
+                    relationship = Relationship.GreaterThanOrEquals;
+                } else { 
+                    relationship = Relationship.Equals;
+                }
+                LinearConstraint linConstr = new LinearConstraint() { Coefficients = coefficients, Relationship = relationship, Value = Convert.ToDouble(parts1[1]) };
+            } //put all linear constraints found in for loop into a list of constraints
         }
 
         public void AddGoal(string description, GoalKind goalKind, String equation)
