@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using RaikesSimplexService.DataModel;
+using RaikesSimplexService.DuckTheSystem;
 
 namespace UnitTests
 {
@@ -139,10 +140,45 @@ namespace UnitTests
         [TestMethod]
         public void PrintTest()
         {
-            Model model = new Model();
-            model.AddConstraints("limits", new String[] { "50x+24y<=2401", "30x+33y<=2100" });
-            model.AddConstraints("others", new String[] { "x>=20", "y>=5" });
-            model.AddGoal("thing for stuff", GoalKind.Maximize, "-7.891x+345.1y=24.10");
+            var constraint1 = new LinearConstraint()
+            {
+                Coefficients = new double[] { 50, 24 },
+                Relationship = Relationship.LessThanOrEquals,
+                Value = 2400
+            };
+            var constraint2 = new LinearConstraint()
+            {
+                Coefficients = new double[] { 30, 33 },
+                Relationship = Relationship.LessThanOrEquals,
+                Value = 2100
+            };
+            var constraint3 = new LinearConstraint()
+            {
+                Coefficients = new double[] { 1, 0 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 20
+            };
+            var constraint4 = new LinearConstraint()
+            {
+                Coefficients = new double[] { 0, 1 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 5
+            };
+            var constraints = new List<LinearConstraint>() { constraint1, constraint2, constraint3, constraint4 };
+
+            var goal = new Goal()
+            {
+                Coefficients = new double[2] { 1, 1 },
+                ConstantTerm = 0
+            };
+
+            var model = new DuckModel()
+            {
+                Constraints = constraints,
+                Goal = goal,
+                GoalKind = GoalKind.Maximize
+            };
+
             System.Diagnostics.Debug.WriteLine(model.ToString());
         }
     }

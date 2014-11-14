@@ -12,6 +12,7 @@ namespace RaikesSimplexService.DataModel
     [DataContract]
     public class Goal
     {
+
         public String Description { get; set; }
 
         /// <summary>

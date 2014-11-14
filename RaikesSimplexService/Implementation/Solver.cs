@@ -14,13 +14,12 @@ namespace RaikesSimplexService.DuckTheSystem
     {
         public Solution Solve(Model model)
         {
-           // throw new NotImplementedException();
-            return null;
+           throw new NotImplementedException();
         }
 
-        public static void Main(string[] args)
+        public void CreateMatrices()
         {
-           
+
         }
     }
 }
