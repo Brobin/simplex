@@ -1,4 +1,4 @@
-﻿using RaikesSimplexService.InsertTeamNameHere;
+﻿using RaikesSimplexService.DuckTheSystem;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -67,7 +67,7 @@ namespace UnitTests
         /// <summary>
         ///A test for Solve
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void ExampleSolveTest()
         {
             #region Arrange
@@ -126,12 +126,24 @@ namespace UnitTests
             #endregion
 
             //Act
+
             var actual = target.Solve(model);
+
 
             //Assert
             CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
             Assert.AreEqual(expected.Quality, actual.Quality);
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
+        }
+
+        [TestMethod]
+        public void PrintTest()
+        {
+            Model model = new Model();
+            model.AddConstraints("limits", new String[] { "50x+24y<=2401", "30x+33y<=2100" });
+            model.AddConstraints("others", new String[] { "x>=20", "y>=5" });
+            model.AddGoal("thing for stuff", GoalKind.Maximize, "7x+3y=24");
+            System.Diagnostics.Debug.WriteLine(model.ToString());
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 
 
 namespace RaikesSimplexService.DataModel
@@ -31,20 +32,48 @@ namespace RaikesSimplexService.DataModel
         [DataMember]
         public GoalKind GoalKind { get; set; }
 
-        public void AddDecisions(params Decision[] variables) {
+        public void AddDecisions(params Decision[] variables)
+        {
 
         }
 
-        public void AddConstraints(string name, params string[] inequalities) {
+        public void AddConstraints(string name, params string[] inequalities)
+        {
 
         }
 
-        public void AddGoal(string description, GoalKind goalKind, params string[] goal){
-        
+        public void AddGoal(string description, GoalKind goalKind, String equation)
+        {
+            String[] parts1 = equation.Split('=');
+            String[] parts2 = Regex.Split(parts1[0], @"(?<=[+-])");
+            double[] coefficients = new double[parts2[0].Length];
+            int x = 0;
+            foreach(String part in parts2)
+            {
+                String coeff = "";
+                if(part.Substring(0,1).Equals("-")){
+                    coeff = "-";
+                }
+                coeff += Regex.Replace(part,"[^0-9.]","");
+                System.Diagnostics.Debug.WriteLine(coeff);
+                coefficients[x] = Convert.ToDouble(coeff);
+                x++;
+            }
+            this.GoalKind = goalKind;
+            double term = Convert.ToDouble(parts1[1]);
+            Goal finalGoal = new Goal(){ Description = description, Coefficients = coefficients, ConstantTerm = term};
+            this.Goal = finalGoal;
+
         }
 
-        public string ToString() {
+        public override string ToString()
+        {
             string myString = "";
+            foreach (int x in this.Goal.Coefficients)
+            {
+                myString += x.ToString() + " ";
+                System.Diagnostics.Debug.WriteLine(myString);
+            }
             return myString;
         }
     }

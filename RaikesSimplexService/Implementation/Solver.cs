@@ -14,7 +14,13 @@ namespace RaikesSimplexService.DuckTheSystem
     {
         public Solution Solve(Model model)
         {
-            throw new NotImplementedException();
+           // throw new NotImplementedException();
+            return null;
+        }
+
+        public static void Main(string[] args)
+        {
+           
         }
     }
 }
