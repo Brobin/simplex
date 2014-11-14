@@ -46,17 +46,15 @@ namespace RaikesSimplexService.DataModel
         {
             String[] parts1 = equation.Split('=');
             String[] parts2 = Regex.Split(parts1[0], @"(?=[+-])");
-            int count = 0;
             List<String> nonEmpty = new List<String>();
             foreach (string p in parts2)
             {
                 if (p != "")
                 {
-                    count++;
                     nonEmpty.Add(p);
                 }
             }
-            double[] coefficients = new double[count];
+            double[] coefficients = new double[nonEmpty.Count];
             int x = 0;
             foreach (String part in nonEmpty)
             {
@@ -74,11 +72,8 @@ namespace RaikesSimplexService.DataModel
 
         public override string ToString()
         {
-            string myString = "";
-            foreach (double x in this.Goal.Coefficients)
-            {
-                myString += x.ToString() + " ";
-            }
+            String myString = "Model:\t\tX\tY\r\n";
+            myString += this.GoalKind + "\t" + this.Goal.ToString();
             return myString;
         }
     }
