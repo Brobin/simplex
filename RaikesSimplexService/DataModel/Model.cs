@@ -46,13 +46,22 @@ namespace RaikesSimplexService.DataModel
         {
             String[] parts1 = equation.Split('=');
             String[] parts2 = Regex.Split(parts1[0], @"(?=[+-])");
-            double[] coefficients = new double[parts2[0].Length];
+            int count = 0;
+            List<String> nonEmpty = new List<String>();
+            foreach (string p in parts2)
+            {
+                if (p != "")
+                {
+                    count++;
+                    nonEmpty.Add(p);
+                }
+            }
+            double[] coefficients = new double[count];
             int x = 0;
-            foreach (String part in parts2)
+            foreach (String part in nonEmpty)
             {
                 String coeff = "";
                 coeff += Regex.Replace(part, "[^0-9.-]", "");
-                System.Diagnostics.Debug.WriteLine(coeff);
                 coefficients[x] = Convert.ToDouble(coeff);
                 x++;
             }
@@ -66,10 +75,9 @@ namespace RaikesSimplexService.DataModel
         public override string ToString()
         {
             string myString = "";
-            foreach (int x in this.Goal.Coefficients)
+            foreach (double x in this.Goal.Coefficients)
             {
                 myString += x.ToString() + " ";
-                System.Diagnostics.Debug.WriteLine(myString);
             }
             return myString;
         }

@@ -142,7 +142,7 @@ namespace UnitTests
             Model model = new Model();
             model.AddConstraints("limits", new String[] { "50x+24y<=2401", "30x+33y<=2100" });
             model.AddConstraints("others", new String[] { "x>=20", "y>=5" });
-            model.AddGoal("thing for stuff", GoalKind.Maximize, "7x+3y=24");
+            model.AddGoal("thing for stuff", GoalKind.Maximize, "-7.891x+345.1y=24.10");
             System.Diagnostics.Debug.WriteLine(model.ToString());
         }
     }
