@@ -45,23 +45,20 @@ namespace RaikesSimplexService.DataModel
         public void AddGoal(string description, GoalKind goalKind, String equation)
         {
             String[] parts1 = equation.Split('=');
-            String[] parts2 = Regex.Split(parts1[0], @"(?<=[+-])");
+            String[] parts2 = Regex.Split(parts1[0], @"(?=[+-])");
             double[] coefficients = new double[parts2[0].Length];
             int x = 0;
-            foreach(String part in parts2)
+            foreach (String part in parts2)
             {
                 String coeff = "";
-                if(part.Substring(0,1).Equals("-")){
-                    coeff = "-";
-                }
-                coeff += Regex.Replace(part,"[^0-9.]","");
+                coeff += Regex.Replace(part, "[^0-9.-]", "");
                 System.Diagnostics.Debug.WriteLine(coeff);
                 coefficients[x] = Convert.ToDouble(coeff);
                 x++;
             }
             this.GoalKind = goalKind;
             double term = Convert.ToDouble(parts1[1]);
-            Goal finalGoal = new Goal(){ Description = description, Coefficients = coefficients, ConstantTerm = term};
+            Goal finalGoal = new Goal() { Description = description, Coefficients = coefficients, ConstantTerm = term };
             this.Goal = finalGoal;
 
         }
