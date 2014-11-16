@@ -6,12 +6,12 @@ using RaikesSimplexService.DataModel;
 
 namespace RaikesSimplexService.DuckTheSystem
 {
-    public static class ExtensionClass
+    public static class DuckString
     {
         public static string DuckString(this Model model)
         {
-            var goal = model.Goal.DuckString();
             var kind = model.GoalKind.DuckString();
+            var goal = model.Goal.DuckString();
             var output = kind + "\t" + goal + "\n";
             foreach(var x in model.Constraints)
             {
@@ -49,10 +49,8 @@ namespace RaikesSimplexService.DuckTheSystem
             {
                 case GoalKind.Minimize:
                     return "Minimize";
-                    break;
                 default:
                     return "Maximize";
-                    break;
             }
         }
 
@@ -62,13 +60,10 @@ namespace RaikesSimplexService.DuckTheSystem
             {
                 case Relationship.GreaterThanOrEquals:
                     return ">= ";
-                    break;
                 case Relationship.LessThanOrEquals:
                     return "<=";
-                    break;
                 default:
                     return "=";
-                    break;
             }
         }
     }
