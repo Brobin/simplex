@@ -6,7 +6,7 @@ using RaikesSimplexService.DataModel;
 
 namespace RaikesSimplexService.DuckTheSystem
 {
-    public static class DuckString
+    public static class DuckStringExtension
     {
         public static string DuckString(this Model model)
         {
