@@ -71,8 +71,7 @@ namespace UnitTests
         [TestMethod]
         public void ExampleSolveTest()
         {
-            #region Arrange
-            var target = new Solver();            
+            #region Arrange           
 
             var lc1 = new LinearConstraint()
             {
@@ -116,7 +115,9 @@ namespace UnitTests
                 Goal = goal,
                 GoalKind = GoalKind.Minimize
             };
-            
+
+            var target = new Solver(model); 
+
             var expected = new Solution()
             {
                 Decisions = new double[2] { 3, 0 },
@@ -168,7 +169,7 @@ namespace UnitTests
 
             var goal = new Goal()
             {
-                Coefficients = new double[2] { 1, 1 },
+                Coefficients = new double[] { 1, 1, 1 },
                 ConstantTerm = 0
             };
 
@@ -178,10 +179,18 @@ namespace UnitTests
                 Goal = goal,
                 GoalKind = GoalKind.Maximize
             };
-            
-            //call method changing into equalities
-            //print out new model using ToString method
-            System.Diagnostics.Debug.WriteLine(model.DuckString());
+
+            System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+
+            var solver = new Solver(model);
+
+            System.Diagnostics.Debug.WriteLine(solver.model.DuckString(false));
+
+            System.Diagnostics.Debug.WriteLine(solver.rhs.DuckString("RHS"));
+
+            System.Diagnostics.Debug.WriteLine(solver.lhs.DuckString("LHS"));
+
+            System.Diagnostics.Debug.WriteLine(solver.zRow.DuckString("Z-Row"));
         }
     }
 }

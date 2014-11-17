@@ -8,27 +8,30 @@ namespace RaikesSimplexService.DuckTheSystem
 {
     public static class DuckStringExtension
     {
-        public static string DuckString(this Model model)
+        public static string DuckString(this Model model, Boolean showSum)
         {
             var kind = model.GoalKind.DuckString();
             var goal = model.Goal.DuckString();
             var output = kind + "\t" + goal + "\n";
             foreach(var x in model.Constraints)
             {
-                output += "\t\t" + x.DuckString() + "\n";
+                output += "\t\t" + x.DuckString(showSum) + "\n";
             }
             return output;
         }
 
-        public static string DuckString(this LinearConstraint constraint)
+        public static string DuckString(this LinearConstraint constraint, Boolean showSum)
         {
             var output = "";
             foreach (var x in constraint.Coefficients)
             {
                 output += x + "\t";
             }
-            output += constraint.Relationship.DuckString();
-            output += " " + constraint.Value;
+            if(showSum)
+            {
+                output += constraint.Relationship.DuckString();
+                output += " " + constraint.Value;
+            }
             return output;
         }
 
@@ -65,6 +68,26 @@ namespace RaikesSimplexService.DuckTheSystem
                 default:
                     return "=";
             }
+        }
+
+        public static string DuckString(this double[,] matrix, string type)
+        {
+            var output = type + ":\n";
+            for (int i = 0; i < matrix.GetLength(1); i++)
+            {
+                output += "\t" + matrix[0, i] + "\n";
+            }
+            return output;
+        }
+
+        public static string DuckString(this double[] array, string Title)
+        {
+            var output = Title + ":\n";
+            foreach (double d in array)
+            {
+                output += "\t" + d;
+            }
+            return output;
         }
     }
 }
