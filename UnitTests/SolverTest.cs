@@ -116,7 +116,7 @@ namespace UnitTests
                 GoalKind = GoalKind.Minimize
             };
 
-            var target = new Solver(model); 
+            var target = new Solver(); 
 
             var expected = new Solution()
             {
@@ -182,7 +182,9 @@ namespace UnitTests
 
             System.Diagnostics.Debug.WriteLine(model.DuckString(true));
 
-            var solver = new Solver(model);
+            var solver = new Solver();
+
+            solver.Solve(model);
 
             System.Diagnostics.Debug.WriteLine(solver.model.DuckString(false));
 

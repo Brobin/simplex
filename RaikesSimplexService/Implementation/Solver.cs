@@ -11,6 +11,11 @@ using RaikesSimplexService.DataModel;
 namespace RaikesSimplexService.DuckTheSystem
 {
     
+    /// <summary>
+    /// This class takes a Linear Programming Model and using the revised
+    /// simplex method will be able to find an optimal solution to problems
+    /// of any size.
+    /// </summary>
     public class Solver : ISolver
     {
         public Model model { get; set; }
@@ -19,7 +24,25 @@ namespace RaikesSimplexService.DuckTheSystem
         public double[,] lhs;
         public double[] zRow;
 
-        public Solver(Model model)
+        /// <summary>
+        /// Constuctor, calls the method to set up the model for running the
+        /// simplex method on the given model
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public Solution Solve(Model model)
+        {
+            this.SetUpModel(model);
+            //throw new NotImplementedException();
+            return null;
+        }
+
+        /// <summary>
+        /// Calls the methods that will create our matrices and prepare
+        /// out model for running the simplex method.
+        /// </summary>
+        /// <param name="model"></param>
+        private void SetUpModel(Model model)
         {
             this.model = model;
             this.AddSlackSurplusVariables(model);
@@ -28,11 +51,12 @@ namespace RaikesSimplexService.DuckTheSystem
             this.createZRow();
         }
 
-        public Solution Solve(Model model)
-        {
-            throw new NotImplementedException();
-        }
-
+        /// <summary>
+        /// Calculates how many slack and surplus variables there will be
+        /// and adds them to each linear constraint
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         public Model AddSlackSurplusVariables(Model model)
         {
             this.model = model;
@@ -64,6 +88,10 @@ namespace RaikesSimplexService.DuckTheSystem
             return model;
         }
 
+        /// <summary>
+        /// Creates the Z Row matrix for the simplex method
+        /// </summary>
+        /// <returns></returns>
         public double[] createZRow()
         {
             Goal g = this.model.Goal;
@@ -84,6 +112,10 @@ namespace RaikesSimplexService.DuckTheSystem
             return zRow;
         }
 
+        /// <summary>
+        /// Creates the lhs, or Basic row for the simplex method
+        /// </summary>
+        /// <returns></returns>
         public double[,] createLhs()
         {
             var c = this.model.Constraints;
@@ -122,6 +154,10 @@ namespace RaikesSimplexService.DuckTheSystem
             return lhs;
         }
 
+        /// <summary>
+        /// Creates the Rhs matrix for the simplex method
+        /// </summary>
+        /// <returns></returns>
         public double[,] createRhs()
         {
             Model m = this.model;
@@ -134,6 +170,13 @@ namespace RaikesSimplexService.DuckTheSystem
             return rhs;
         }
 
+        /// <summary>
+        /// Returns the value of a slack variable (0, 1, -1) based on the relationship
+        /// and the rhs value
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         private int getSValue(Relationship r, double value)
         {
             var s = 0;
@@ -146,7 +189,7 @@ namespace RaikesSimplexService.DuckTheSystem
                 case Relationship.LessThanOrEquals:
                     return 1;
             }
-            return 0;
+            return s;
         }
 
         public Matrix[,] fillInMatrix(Model model)
