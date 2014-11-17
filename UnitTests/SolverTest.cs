@@ -172,14 +172,14 @@ namespace UnitTests
                 ConstantTerm = 0
             };
 
-            var model = new DuckModel()
+            var model = new Model()
             {
                 Constraints = constraints,
                 Goal = goal,
                 GoalKind = GoalKind.Maximize
             };
 
-            System.Diagnostics.Debug.WriteLine(model.ToString());
+            System.Diagnostics.Debug.WriteLine(model.DuckString());
         }
     }
 }
