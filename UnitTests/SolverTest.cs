@@ -142,25 +142,25 @@ namespace UnitTests
         {
             var constraint1 = new LinearConstraint()
             {
-                Coefficients = new double[] { 50, 24 },
+                Coefficients = new double[] { 50, 24, 6 },
                 Relationship = Relationship.LessThanOrEquals,
                 Value = 2400
             };
             var constraint2 = new LinearConstraint()
             {
-                Coefficients = new double[] { 30, 33 },
+                Coefficients = new double[] { 30, 0, 33 },
                 Relationship = Relationship.LessThanOrEquals,
                 Value = 2100
             };
             var constraint3 = new LinearConstraint()
             {
-                Coefficients = new double[] { 1, 0 },
+                Coefficients = new double[] { 1, 0, 0 },
                 Relationship = Relationship.GreaterThanOrEquals,
                 Value = 20
             };
             var constraint4 = new LinearConstraint()
             {
-                Coefficients = new double[] { 0, 1 },
+                Coefficients = new double[] { 0, 1, 0 },
                 Relationship = Relationship.GreaterThanOrEquals,
                 Value = 5
             };
@@ -178,7 +178,9 @@ namespace UnitTests
                 Goal = goal,
                 GoalKind = GoalKind.Maximize
             };
-
+            
+            //call method changing into equalities
+            //print out new model using ToString method
             System.Diagnostics.Debug.WriteLine(model.DuckString());
         }
     }
