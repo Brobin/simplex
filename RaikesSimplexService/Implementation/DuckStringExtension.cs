@@ -7,7 +7,7 @@ using RaikesSimplexService.DataModel;
 namespace RaikesSimplexService.DuckTheSystem
 {
     /// <summary>
-    /// SuckStringExtension contains our custom ToString methods so that we
+    /// DuckStringExtension contains our custom ToString methods so that we
     /// can override the defualt method without having to extend each model.
     /// </summary>
     public static class DuckStringExtension
