@@ -178,10 +178,15 @@ namespace UnitTests
                 Goal = goal,
                 GoalKind = GoalKind.Maximize
             };
+
+            System.Diagnostics.Debug.WriteLine(model.DuckString());
+
+            var solver = new Solver();
+            var newModel = solver.AddSlackSurplusVariables(model);
             
             //call method changing into equalities
             //print out new model using ToString method
-            System.Diagnostics.Debug.WriteLine(model.DuckString());
+            System.Diagnostics.Debug.WriteLine(newModel.DuckString());
         }
     }
 }
