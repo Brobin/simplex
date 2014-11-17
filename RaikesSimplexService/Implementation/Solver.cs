@@ -122,11 +122,11 @@ namespace RaikesSimplexService.DuckTheSystem
             int cons = c.Count;
             double[,] lhs = new double[1, cons];
             int size = c[0].Coefficients.Length;
-            for(int i = 0; i < cons; i++)
+            for(int rows = 0; rows < cons; rows++)
             {
-                for(int j = 0; j < size; j++)
+                for(int columns = 0; columns < size; columns++)
                 {
-                    var current = c[i].Coefficients[j];
+                    var current = c[rows].Coefficients[columns];
                     var found = false;
                     if(current == 1 || current == -1)
                     {
@@ -134,10 +134,10 @@ namespace RaikesSimplexService.DuckTheSystem
                         int k = 0;
                         while(found && k < cons)
                         {
-                            var below = c[k].Coefficients[j];
+                            var below = c[k].Coefficients[columns];
                             if(below != 0)
                             {
-                                if(k != i)
+                                if(k != rows)
                                     found = false;
                             }
                             k++;
@@ -145,7 +145,7 @@ namespace RaikesSimplexService.DuckTheSystem
                     }
                     if (found)
                     {
-                        lhs[0,i] = j;
+                        lhs[0,rows] = columns;
                         break;
                     }
                 }
