@@ -38,11 +38,7 @@ namespace RaikesSimplexService.DuckTheSystem
         /// <returns></returns>
         public static string DuckString(this LinearConstraint constraint, Boolean showSum)
         {
-            var output = "";
-            foreach (var x in constraint.Coefficients)
-            {
-                output += x + "\t";
-            }
+            var output = String.Join("\t", constraint.Coefficients);
             if(showSum)
             {
                 output += constraint.Relationship.DuckString();
@@ -58,11 +54,7 @@ namespace RaikesSimplexService.DuckTheSystem
         /// <returns></returns>
         public static string DuckString(this Goal goal)
         {
-            var output = "";
-            foreach (var c in goal.Coefficients)
-            {
-                output += c + "\t";
-            }
+            var output = String.Join("\t", goal.Coefficients);
             output += " = " + goal.ConstantTerm;
             return output;
         }
@@ -126,10 +118,7 @@ namespace RaikesSimplexService.DuckTheSystem
         public static string DuckString(this double[] array, string Title)
         {
             var output = Title + ":\n";
-            foreach (double d in array)
-            {
-                output += "\t" + d;
-            }
+            output += String.Join("\t", array);
             return output;
         }
     }
