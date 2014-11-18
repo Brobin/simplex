@@ -136,7 +136,7 @@ namespace UnitTests
             CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
             Assert.AreEqual(expected.Quality, actual.Quality);
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
-        }
+        } 
 
         [TestMethod]
         public void PrintTest()
@@ -163,7 +163,7 @@ namespace UnitTests
             {
                 Coefficients = new double[] { 0, 1, 0 },
                 Relationship = Relationship.GreaterThanOrEquals,
-                Value = 5
+                Value = 0
             };
             var constraints = new List<LinearConstraint>() { constraint1, constraint2, constraint3, constraint4 };
 
@@ -193,6 +193,7 @@ namespace UnitTests
             System.Diagnostics.Debug.WriteLine(solver.lhs.DuckString("LHS"));
 
             System.Diagnostics.Debug.WriteLine(solver.zRow.DuckString("Z-Row"));
+
         }
     }
 }

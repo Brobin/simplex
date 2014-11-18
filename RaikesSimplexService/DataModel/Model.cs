@@ -38,7 +38,7 @@ namespace RaikesSimplexService.DataModel
 
         }
 
-        public void AddConstraints(string name, params string[] inequalities)
+       /* public void AddConstraints(string name, params string[] inequalities)
         {
             for (int i = 0; i < inequalities.Length; i++) {
                 string[] parts1 = inequalities[i].Split('=');
@@ -96,7 +96,7 @@ namespace RaikesSimplexService.DataModel
             Goal finalGoal = new Goal() { Description = description, Coefficients = coefficients, ConstantTerm = term };
             this.Goal = finalGoal;
 
-        }
+        } */
 
         public override string ToString()
         {

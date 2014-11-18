@@ -20,6 +20,7 @@ namespace RaikesSimplexService.DuckTheSystem
     {
         public Model model { get; set; }
         private int sVariables;
+        private int aVariables;
         public double[,] rhs;
         public double[,] lhs;
         public double[] zRow;
@@ -45,10 +46,38 @@ namespace RaikesSimplexService.DuckTheSystem
         private void SetUpModel(Model model)
         {
             this.model = model;
+            //this.removeUnnecessaryConstraints(model);
             this.AddSlackSurplusVariables(model);
+            this.AddArtificialVariables(model);
             this.createRhs();
             this.createLhs();
             this.createZRow();
+        }
+
+        public Model removeUnnecessaryConstraints(Model model)
+        {
+            Model matrixModel = model;
+            for (int j = 0; j < matrixModel.Constraints.Count; j++)
+            {
+                var c = matrixModel.Constraints.ElementAt(j);
+                if (c.Value == 0)
+                {
+                    int numVariables = 0;
+                    for (int i = 0; i < c.Coefficients.Length; i++)
+                    {
+                        if (c.Coefficients[i] != 0)
+                        {
+                            numVariables++;
+                        }
+                    }
+                    if (numVariables == 1)
+                    {
+                        matrixModel.Constraints.RemoveAt(j);
+                    }
+                }
+            }
+
+            return matrixModel;
         }
 
         /// <summary>
@@ -59,34 +88,128 @@ namespace RaikesSimplexService.DuckTheSystem
         /// <returns></returns>
         public Model AddSlackSurplusVariables(Model model)
         {
-            this.model = model;
-            this.sVariables = model.Constraints.Count;
+            
+            this.model = model;//Do we need this at beginning and end of method?
+            //this.sVariables = model.Constraints.Count;
+            this.sVariables = this.countSVariables(model);
             var sUsed = 0;
             foreach(var c in model.Constraints)
             {
+                Relationship y = c.Relationship;
                 //get to specific coefficient = model.Constraints.ElementAt(0).Coefficients[0]
-                var size = c.Coefficients.Length;
+
+               var size = c.Coefficients.Length;
+
+             
                 double[] equality = new double[size + this.sVariables];
                 for(int i = 0; i < size; i++)
                 {
                     equality[i] = c.Coefficients[i];
                 }
+                Relationship f = c.Relationship;
                 var s = this.getSValue(c.Relationship, c.Value);
                 var complete = false;
                 for (int j = size; j < equality.Length; j++)
                 {
-                    if (!complete && j >= size + sUsed)
-                    {
-                        equality[j] = s;
-                        complete = true;
-                        sUsed++;
+                    switch (c.Relationship) { 
+                        case Relationship.GreaterThanOrEquals:
+                            if (!complete && j >= size + sUsed)
+                            {
+                                equality[j] = s;
+                                complete = true;
+                                sUsed++;
+                            }
+                            break;
+                        case Relationship.LessThanOrEquals:
+                            if (!complete && j >= size + sUsed)
+                            {
+                                equality[j] = s;
+                                complete = true;
+                                sUsed++;
+                            }
+                            break;
+                    }
+                }
+                Relationship d = c.Relationship;
+                c.Coefficients = equality;
+                Relationship r = c.Relationship;
+            }
+            this.model = model;
+            return model;
+        }
+
+        public Model AddArtificialVariables(Model model)
+        {
+            this.model = model;
+            this.aVariables = this.countAVariables(model);
+            var aUsed = 0;
+            foreach (var c in model.Constraints)
+            {
+                //get to specific coefficient = model.Constraints.ElementAt(0).Coefficients[0]
+
+                var size = c.Coefficients.Length;
+
+                double[] equality = new double[size + this.aVariables];
+                for (int i = 0; i < size; i++)
+                {
+                    equality[i] = c.Coefficients[i];
+                }
+                int a = this.getAValue(c.Relationship, c.Value);
+             
+                var complete = false;
+                for (int j = size; j < equality.Length; j++)
+                {
+                    switch (c.Relationship) {
+                        case Relationship.GreaterThanOrEquals:
+                            if (!complete && j >= size + aUsed)
+                            {
+                                equality[j] = a;//
+                                complete = true;
+                                aUsed++;
+                            }
+                            break;
                     }
                 }
                 c.Coefficients = equality;
             }
             this.model = model;
+
+
             return model;
+
         }
+
+        private int countSVariables(Model model)
+        {
+            int size = 0;
+            foreach (var c in model.Constraints)
+            {
+                int returnValue = this.getSValue(c.Relationship, c.Value);
+                if (returnValue != 0)
+                {
+                    size++;
+                }
+            }
+
+            return size;
+        }
+
+        private int countAVariables(Model model)
+        {
+            int size = 0;
+            foreach (var c in model.Constraints)
+            {
+                int returnValue = this.getAValue(c.Relationship, c.Value);
+                if (returnValue != 0)
+                {
+                    size++;
+                }
+            }
+
+            return size;
+        }
+
+       
 
         /// <summary>
         /// Creates the Z Row matrix for the simplex method
@@ -192,6 +315,17 @@ namespace RaikesSimplexService.DuckTheSystem
             return s;
         }
 
+        private int getAValue(Relationship r, double value)
+        {
+            int a = 0;
+            Relationship r2 = r;
+            if (r.Equals(Relationship.GreaterThanOrEquals) && value != 0){
+
+                a = 1;
+      
+            }   
+            return a;
+        }
         public Matrix[,] fillInMatrix(Model model)
         {
             int rows = model.Constraints.Count;
