@@ -215,7 +215,7 @@ namespace RaikesSimplexService.DuckTheSystem
         public double[,] createLhs()
         {
             var c = this.model.Constraints;
-            int cons = c.Count;
+            int cons = this.sVariables;
             double[,] lhs = new double[1, cons];
             int size = c[0].Coefficients.Length;
             for(int rows = 0; rows < cons; rows++)
