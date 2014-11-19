@@ -23,8 +23,9 @@ namespace RaikesSimplexService.DuckTheSystem
         private int aVariables;
         public double[,] rhs;
         public double[,] lhs;
-        public double[] zRow;
-        public double[] wRow;
+        public double[] zRow;//two d double array to be represented as matrices
+        public double[] wRow;// two d double array respesented as matrices
+        public double[,] modelMatrix;
 
         /// <summary>
         /// Constuctor, calls the method to set up the model for running the
@@ -187,6 +188,21 @@ namespace RaikesSimplexService.DuckTheSystem
             this.zRow = zRow;
         }
 
+        public void createModelMatrix()
+        {
+            Model m = this.model;
+            int rowLength = m.Constraints[0].Coefficients.Length;
+            int columnHeight = m.Constraints.Count;
+            double[,] modelMatrix2 = new double[rowLength, columnHeight];
+            for (int i = 0; i < rowLength; i++)
+            {
+                for (int j = 0; j < columnHeight; j++)
+                {
+                    modelMatrix2[i,j] = m.Constraints[i].Coefficients[j];
+                }
+            }
+            this.modelMatrix = modelMatrix2;
+        }
         /// <summary>
         /// Creates the W Row for the first phase of the two phase simplex method
         /// </summary>

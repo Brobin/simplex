@@ -186,7 +186,7 @@ namespace UnitTests
 
             solver.Solve(model);
 
-            System.Diagnostics.Debug.WriteLine(solver.model.DuckString(false));
+            System.Diagnostics.Debug.WriteLine(solver.modelMatrix.DuckString("Model"));
 
             System.Diagnostics.Debug.WriteLine(solver.rhs.DuckString("RHS"));
 
