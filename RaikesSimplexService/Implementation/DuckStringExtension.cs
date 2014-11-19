@@ -118,7 +118,7 @@ namespace RaikesSimplexService.DuckTheSystem
         public static string DuckString(this double[] array, string Title)
         {
             var output = Title + ":\n";
-            output += String.Join("\t", array);
+            output += String.Join("\t", array) + "\n";
             return output;
         }
     }

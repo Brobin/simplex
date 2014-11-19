@@ -194,6 +194,8 @@ namespace UnitTests
 
             System.Diagnostics.Debug.WriteLine(solver.zRow.DuckString("Z-Row"));
 
+            System.Diagnostics.Debug.WriteLine(solver.wRow.DuckString("W-Row"));
+
         }
     }
 }
