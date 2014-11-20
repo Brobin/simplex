@@ -55,6 +55,7 @@ namespace RaikesSimplexService.DuckTheSystem
             this.createLhs();
             this.createZRow();
             this.createWRow();
+            this.createModelMatrix();
         }
 
         public Model removeUnnecessaryConstraints(Model model){
@@ -190,15 +191,15 @@ namespace RaikesSimplexService.DuckTheSystem
 
         public void createModelMatrix()
         {
-            Model m = this.model;
-            int rowLength = m.Constraints[0].Coefficients.Length;
-            int columnHeight = m.Constraints.Count;
+            //Model m = this.model;
+            int rowLength = this.model.Constraints[0].Coefficients.Length;
+            int columnHeight = this.model.Constraints.Count;
             double[,] modelMatrix2 = new double[rowLength, columnHeight];
             for (int i = 0; i < rowLength; i++)
             {
                 for (int j = 0; j < columnHeight; j++)
                 {
-                    modelMatrix2[i,j] = m.Constraints[i].Coefficients[j];
+                    modelMatrix2[i,j] = this.model.Constraints[j].Coefficients[i];
                 }
             }
             this.modelMatrix = modelMatrix2;

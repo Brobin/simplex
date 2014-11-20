@@ -102,11 +102,14 @@ namespace RaikesSimplexService.DuckTheSystem
         public static string DuckString(this double[,] matrix, string type)
         {
             var output = type + ":\n";
-            for (int i = 0; i < matrix.GetLength(1); i++)
+            for (int i = 0; i < matrix.GetLength(0); i++)
             {
-                output += "\t" + matrix[0, i] + "\n";
+                for (int j = 0; j < matrix.GetLength(1); j++)
+                {
+                    output += "\t" + matrix[i, j];
+                }
             }
-            return output;
+            return output + "\n";
         }
 
         /// <summary>
