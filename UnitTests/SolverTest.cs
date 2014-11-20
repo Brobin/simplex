@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using RaikesSimplexService.DataModel;
 using RaikesSimplexService.DuckTheSystem;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace UnitTests
 {
@@ -196,6 +197,20 @@ namespace UnitTests
 
             System.Diagnostics.Debug.WriteLine(solver.wRow.DuckString("W-Row"));
 
+        }
+
+        [TestMethod]
+        public void MatrixInverseTest()
+        {
+            double[,] test = {
+                                 {1,1,1},
+                                 {0,2,1},
+                                 {3,0,1}
+                             };
+            var M = Matrix<double>.Build.DenseOfArray(test);
+            var inverse = M.Inverse();
+            System.Diagnostics.Debug.WriteLine(M.ToString());
+            System.Diagnostics.Debug.WriteLine(inverse.ToString());
         }
     }
 }
