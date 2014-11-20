@@ -92,37 +92,5 @@ namespace RaikesSimplexService.DuckTheSystem
                     return "=";
             }
         }
-
-        /// <summary>
-        /// Converts a 2D double array (or matrix) to a string with a given title
-        /// </summary>
-        /// <param name="matrix">the 2D array</param>
-        /// <param name="type">title of the matrix</param>
-        /// <returns></returns>
-        public static string DuckString(this double[,] matrix, string type)
-        {
-            var output = type + ":\n";
-            for (int i = 0; i < matrix.GetLength(0); i++)
-            {
-                for (int j = 0; j < matrix.GetLength(1); j++)
-                {
-                    output += "\t" + matrix[i, j];
-                }
-            }
-            return output + "\n";
-        }
-
-        /// <summary>
-        /// Converts a 1D double array to a string
-        /// </summary>
-        /// <param name="array">the 1D array</param>
-        /// <param name="Title">the title</param>
-        /// <returns></returns>
-        public static string DuckString(this double[] array, string Title)
-        {
-            var output = Title + ":\n";
-            output += String.Join("\t", array) + "\n";
-            return output;
-        }
     }
 }

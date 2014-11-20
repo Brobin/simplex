@@ -24,20 +24,36 @@ namespace RaikesSimplexService.DuckTheSystem
         private int aVariables;
         public Matrix<double> rhs;
         public Matrix<double> lhs;
-        public Matrix<double> zRow;//two d double array to be represented as matrices
-        public Matrix<double> wRow;// two d double array respesented as matrices
+        public Matrix<double> zRow;
+        public Matrix<double> wRow;
         public Matrix<double> modelMatrix;
 
         /// <summary>
-        /// Constuctor, calls the method to set up the model for running the
-        /// simplex method on the given model
+        /// Runs the simplex algorithm to find an optimal solution for a 
+        /// given model
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
         public Solution Solve(Model model)
         {
             this.SetUpModel(model);
-            //throw new NotImplementedException();
+
+            // 1. Get the original columns saved (modelMatrix)
+
+            // 2. Get the B matrix: The B matrix is a matrix of the basic varibles
+                // Find the inverse of the B matrix
+                // Find Xb' the inverse of b multiplied with the rhs
+
+            // 3. For each non basic variable
+                    // Multiply the inverse of B with the each column of non basic variables (Pn')
+                    // Multiple that result with the vector of the basic variables in the Z Row
+                    // Subtract the result from the non basic variable in the z row
+                // find the smallest of these, that is entering variable
+
+            // 4. Find the entering column
+                // (Xb' / Pn') * B'
+
+            // repeat 2-5 until no negative values are in the z row
             return null;
         }
 
@@ -49,7 +65,6 @@ namespace RaikesSimplexService.DuckTheSystem
         private void SetUpModel(Model model)
         {
             this.model = model;
-            //this.removeUnnecessaryConstraints(model);
             this.AddSlackSurplusVariables();
             this.AddArtificialVariables();
             this.createRhs();
@@ -57,25 +72,6 @@ namespace RaikesSimplexService.DuckTheSystem
             this.createZRow();
             this.createWRow();
             this.createModelMatrix();
-        }
-
-        public Model removeUnnecessaryConstraints(Model model){
-            Model matrixModel = model;
-            for (int j = 0; j < matrixModel.Constraints.Count; j++) {
-                var c = matrixModel.Constraints.ElementAt(j);
-                if (c.Value == 0) {
-                    int numVariables = 0;
-                    for (int i = 0; i < c.Coefficients.Length; i++) {
-                        if (c.Coefficients[i] != 0){
-                            numVariables++;
-                        }
-                    } 
-                    if (numVariables == 1){
-                        matrixModel.Constraints.RemoveAt(j);
-                    }
-                }
-            }
-            return matrixModel;
         }
 
         /// <summary>
@@ -136,7 +132,7 @@ namespace RaikesSimplexService.DuckTheSystem
                         case Relationship.GreaterThanOrEquals:
                             if (!complete && j >= size + aUsed)
                             {
-                                equality[j] = a;//
+                                equality[j] = a;
                                 complete = true;
                                 aUsed++;
                             }
@@ -147,6 +143,10 @@ namespace RaikesSimplexService.DuckTheSystem
             }
         }
 
+        /// <summary>
+        /// Counts the number of S Variables needed for the model
+        /// </summary>
+        /// <returns></returns>
         private int countSVariables()
         {
             int size = 0;
@@ -158,6 +158,10 @@ namespace RaikesSimplexService.DuckTheSystem
             return size;
         }
 
+        /// <summary>
+        /// Counts the number of artificial variables needed for the model
+        /// </summary>
+        /// <returns></returns>
         private int countAVariables(){
             int size = 0;
             foreach (var c in this.model.Constraints)
