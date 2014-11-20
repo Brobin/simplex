@@ -7,6 +7,7 @@ using System.Text;
 using System.Drawing.Drawing2D;
 using RaikesSimplexService.Contracts;
 using RaikesSimplexService.DataModel;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace RaikesSimplexService.DuckTheSystem
 {
