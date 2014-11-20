@@ -24,8 +24,9 @@ namespace RaikesSimplexService.DuckTheSystem
         private int aVariables;
         public double[,] rhs;
         public double[,] lhs;
-        public double[] zRow;
-        public double[] wRow;
+        public double[,] zRow;//two d double array to be represented as matrices
+        public double[,] wRow;// two d double array respesented as matrices
+        public double[,] modelMatrix;
 
         /// <summary>
         /// Constuctor, calls the method to set up the model for running the
@@ -55,6 +56,7 @@ namespace RaikesSimplexService.DuckTheSystem
             this.createLhs();
             this.createZRow();
             this.createWRow();
+            this.createModelMatrix();
         }
 
         public Model removeUnnecessaryConstraints(Model model){
@@ -172,22 +174,37 @@ namespace RaikesSimplexService.DuckTheSystem
         public void createZRow()
         {
             Goal g = this.model.Goal;
-            double[] zRow = new double[g.Coefficients.Length + sVariables];
+            double[,] zRow = new double[g.Coefficients.Length + sVariables,1];
             for(int i = 0; i < g.Coefficients.Length; i++)
             {
                 switch(this.model.GoalKind)
                 {
                     case GoalKind.Maximize:
-                        zRow[i] = 0 - g.Coefficients[i];
+                        zRow[i,0] = 0 - g.Coefficients[i];
                         break;
                     case GoalKind.Minimize:
-                        zRow[i] = g.Coefficients[i];
+                        zRow[i,0] = g.Coefficients[i];
                         break;
                 }
             }
             this.zRow = zRow;
         }
 
+        public void createModelMatrix()
+        {
+            //Model m = this.model;
+            int rowLength = this.model.Constraints[0].Coefficients.Length;
+            int columnHeight = this.model.Constraints.Count;
+            double[,] modelMatrix2 = new double[rowLength, columnHeight];
+            for (int i = 0; i < rowLength; i++)
+            {
+                for (int j = 0; j < columnHeight; j++)
+                {
+                    modelMatrix2[i,j] = this.model.Constraints[j].Coefficients[i];
+                }
+            }
+            this.modelMatrix = modelMatrix2;
+        }
         /// <summary>
         /// Creates the W Row for the first phase of the two phase simplex method
         /// </summary>
@@ -196,7 +213,7 @@ namespace RaikesSimplexService.DuckTheSystem
             int numConstraints = this.model.Constraints.Count;
             int numAVars = countAVariables();
             int numVars = model.Constraints.ElementAt(0).Coefficients.Length - numAVars;
-            double[] wRow = new double[numVars];
+            double[,] wRow = new double[numVars,1];
             for (int i = 0; i < numVars; i++)
             {
                 double wCoeff = 0;
@@ -204,7 +221,7 @@ namespace RaikesSimplexService.DuckTheSystem
                 {
                     wCoeff += model.Constraints.ElementAt(j).Coefficients[i];
                 }
-                wRow[i] = -1*wCoeff;
+                wRow[i,0] = -1*wCoeff;
             }
             this.wRow = wRow;
         }
