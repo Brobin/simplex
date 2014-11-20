@@ -188,15 +188,15 @@ namespace UnitTests
 
             solver.Solve(model);
 
-            System.Diagnostics.Debug.WriteLine(solver.modelMatrix.DuckString("Model"));
+            System.Diagnostics.Debug.WriteLine("Model" + solver.modelMatrix.ToString());
 
-            System.Diagnostics.Debug.WriteLine(solver.rhs.DuckString("RHS"));
+            System.Diagnostics.Debug.WriteLine("RHS" + solver.rhs.ToString());
 
-            System.Diagnostics.Debug.WriteLine(solver.lhs.DuckString("LHS"));
+            System.Diagnostics.Debug.WriteLine("LHS" + solver.lhs.ToString());
 
-            System.Diagnostics.Debug.WriteLine(solver.zRow.DuckString("Z-Row"));
+            System.Diagnostics.Debug.WriteLine("Z-Row" + solver.zRow.ToString());
 
-            System.Diagnostics.Debug.WriteLine(solver.wRow.DuckString("W-Row"));
+            System.Diagnostics.Debug.WriteLine("W-Row" + solver.wRow.ToString());
 
         }
 
@@ -213,5 +213,7 @@ namespace UnitTests
             System.Diagnostics.Debug.WriteLine(M.ToString());
             System.Diagnostics.Debug.WriteLine(inverse.ToString());
         }
+
+
     }
 }

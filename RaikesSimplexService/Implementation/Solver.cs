@@ -22,11 +22,11 @@ namespace RaikesSimplexService.DuckTheSystem
         public Model model { get; set; }
         private int sVariables;
         private int aVariables;
-        public double[,] rhs;
-        public double[,] lhs;
-        public double[,] zRow;//two d double array to be represented as matrices
-        public double[,] wRow;// two d double array respesented as matrices
-        public double[,] modelMatrix;
+        public Matrix<double> rhs;
+        public Matrix<double> lhs;
+        public Matrix<double> zRow;//two d double array to be represented as matrices
+        public Matrix<double> wRow;// two d double array respesented as matrices
+        public Matrix<double> modelMatrix;
 
         /// <summary>
         /// Constuctor, calls the method to set up the model for running the
@@ -174,36 +174,39 @@ namespace RaikesSimplexService.DuckTheSystem
         public void createZRow()
         {
             Goal g = this.model.Goal;
-            double[,] zRow = new double[g.Coefficients.Length + sVariables,1];
+            double[,] zRow = new double[1,g.Coefficients.Length + sVariables];
             for(int i = 0; i < g.Coefficients.Length; i++)
             {
                 switch(this.model.GoalKind)
                 {
                     case GoalKind.Maximize:
-                        zRow[i,0] = 0 - g.Coefficients[i];
+                        zRow[0,i] = 0 - g.Coefficients[i];
                         break;
                     case GoalKind.Minimize:
-                        zRow[i,0] = g.Coefficients[i];
+                        zRow[0,i] = g.Coefficients[i];
                         break;
                 }
             }
-            this.zRow = zRow;
-        }
 
+            this.zRow = Matrix<double>.Build.DenseOfArray(zRow);
+
+
+        }
+        
         public void createModelMatrix()
         {
             //Model m = this.model;
-            int rowLength = this.model.Constraints[0].Coefficients.Length;
-            int columnHeight = this.model.Constraints.Count;
-            double[,] modelMatrix2 = new double[rowLength, columnHeight];
-            for (int i = 0; i < rowLength; i++)
+            int lengthOfConstraint = this.model.Constraints[0].Coefficients.Length;
+            int NumberofConstraints = this.model.Constraints.Count;
+            double[,] modelMatrix2 = new double[NumberofConstraints,lengthOfConstraint];
+            for (int i = 0; i < lengthOfConstraint; i++)
             {
-                for (int j = 0; j < columnHeight; j++)
+                for (int j = 0; j < NumberofConstraints; j++)
                 {
-                    modelMatrix2[i,j] = this.model.Constraints[j].Coefficients[i];
+                    modelMatrix2[j,i] = this.model.Constraints[j].Coefficients[i];
                 }
             }
-            this.modelMatrix = modelMatrix2;
+            this.modelMatrix = Matrix<double>.Build.DenseOfArray(modelMatrix2);
         }
         /// <summary>
         /// Creates the W Row for the first phase of the two phase simplex method
@@ -213,7 +216,7 @@ namespace RaikesSimplexService.DuckTheSystem
             int numConstraints = this.model.Constraints.Count;
             int numAVars = countAVariables();
             int numVars = model.Constraints.ElementAt(0).Coefficients.Length - numAVars;
-            double[,] wRow = new double[numVars,1];
+            double[,] wRow = new double[1,numVars];
             for (int i = 0; i < numVars; i++)
             {
                 double wCoeff = 0;
@@ -221,20 +224,20 @@ namespace RaikesSimplexService.DuckTheSystem
                 {
                     wCoeff += model.Constraints.ElementAt(j).Coefficients[i];
                 }
-                wRow[i,0] = -1*wCoeff;
+                wRow[0,i] = -1*wCoeff;
             }
-            this.wRow = wRow;
+            this.wRow = Matrix<double>.Build.DenseOfArray(wRow); ;
         }
 
         /// <summary>
         /// Creates the lhs, or Basic row for the simplex method
         /// </summary>
         /// <returns></returns>
-        public double[,] createLhs()
+        public void createLhs()
         {
             var c = this.model.Constraints;
             int cons = this.sVariables;
-            double[,] lhs = new double[1, cons];
+            double[,] lhs = new double[cons,1];
             int size = c[0].Coefficients.Length;
             for(int rows = 0; rows < cons; rows++)
             {
@@ -260,13 +263,12 @@ namespace RaikesSimplexService.DuckTheSystem
                         }
                     }
                     if (found) {
-                        lhs[0,rows] = columns;
+                        lhs[rows, 0] = columns;
                         break;
                     }
                 }
             }
-            this.lhs = lhs;
-            return lhs;
+            this.lhs = Matrix<double>.Build.DenseOfArray(lhs); 
         }
 
         /// <summary>
@@ -274,11 +276,11 @@ namespace RaikesSimplexService.DuckTheSystem
         /// </summary>
         public void createRhs()
         {
-            double[,] rhs = new double[1,this.model.Constraints.Count];
+            double[,] rhs = new double[this.model.Constraints.Count,1];
             for (int i = 0; i < this.model.Constraints.Count; i++ ) {
-                rhs[0,i] = this.model.Constraints[i].Value;
+                rhs[i,0] = this.model.Constraints[i].Value;
             }
-            this.rhs = rhs;
+            this.rhs = Matrix<double>.Build.DenseOfArray(rhs); 
         }
 
         /// <summary>
