@@ -23,8 +23,8 @@ namespace RaikesSimplexService.DuckTheSystem
         private int aVariables;
         public double[,] rhs;
         public double[,] lhs;
-        public double[] zRow;
-        public double[] wRow;
+        public double[,] zRow;
+        public double[,] wRow;
 
         /// <summary>
         /// Constuctor, calls the method to set up the model for running the
@@ -171,16 +171,16 @@ namespace RaikesSimplexService.DuckTheSystem
         public void createZRow()
         {
             Goal g = this.model.Goal;
-            double[] zRow = new double[g.Coefficients.Length + sVariables];
+            double[,] zRow = new double[g.Coefficients.Length + sVariables,1];
             for(int i = 0; i < g.Coefficients.Length; i++)
             {
                 switch(this.model.GoalKind)
                 {
                     case GoalKind.Maximize:
-                        zRow[i] = 0 - g.Coefficients[i];
+                        zRow[i,0] = 0 - g.Coefficients[i];
                         break;
                     case GoalKind.Minimize:
-                        zRow[i] = g.Coefficients[i];
+                        zRow[i,0] = g.Coefficients[i];
                         break;
                 }
             }
@@ -195,7 +195,7 @@ namespace RaikesSimplexService.DuckTheSystem
             int numConstraints = this.model.Constraints.Count;
             int numAVars = countAVariables();
             int numVars = model.Constraints.ElementAt(0).Coefficients.Length - numAVars;
-            double[] wRow = new double[numVars];
+            double[,] wRow = new double[numVars,1];
             for (int i = 0; i < numVars; i++)
             {
                 double wCoeff = 0;
@@ -203,7 +203,7 @@ namespace RaikesSimplexService.DuckTheSystem
                 {
                     wCoeff += model.Constraints.ElementAt(j).Coefficients[i];
                 }
-                wRow[i] = -1*wCoeff;
+                wRow[i,0] = -1*wCoeff;
             }
             this.wRow = wRow;
         }
