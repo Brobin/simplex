@@ -52,12 +52,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Contracts\ISolver.cs" />
-    <Compile Include="DataModel\Decision.cs" />
+    <Compile Include="Contracts\Decision.cs" />
     <Compile Include="DataModel\Goal.cs" />
     <Compile Include="DataModel\GoalKind.cs" />
     <Compile Include="DataModel\LinearConstraint.cs" />
     <Compile Include="DataModel\Model.cs" />
-    <Compile Include="DataModel\Solution.cs" />
+    <Compile Include="Contracts\Solution.cs" />
     <Compile Include="DataModel\SolutionQuality.cs" />
     <Compile Include="Implementation\DuckStringExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

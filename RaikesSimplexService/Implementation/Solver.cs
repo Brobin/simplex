@@ -27,6 +27,12 @@ namespace RaikesSimplexService.DuckTheSystem
         public Matrix<double> zRow;
         public Matrix<double> wRow;
         public Matrix<double> modelMatrix;
+        public Matrix<double> bMatrix;
+        public Matrix<double> bInverse;
+        public Matrix<double> xBPrime;
+        public Matrix<double> zVector;
+        public List<Matrix<double>> pMatrices;
+        public List<double> pPrimeList;
 
         /// <summary>
         /// Runs the simplex algorithm to find an optimal solution for a 
@@ -44,11 +50,20 @@ namespace RaikesSimplexService.DuckTheSystem
                 // Find the inverse of the B matrix
                 // Find Xb' the inverse of b multiplied with the rhs
 
+            this.createBMatrixAndZVector();
+
+            this.bInverse = this.bMatrix.Inverse();
+
+            this.xBPrime = this.bInverse.Multiply(this.rhs);
+            
+
             // 3. For each non basic variable
                     // Multiply the inverse of B with the each column of non basic variables (Pn')
                     // Multiple that result with the vector of the basic variables in the Z Row
                     // Subtract the result from the non basic variable in the z row
                 // find the smallest of these, that is entering variable
+
+            this.getPMatrices();
 
             // 4. Find the entering column
                 // (Xb' / Pn') * B'
@@ -57,6 +72,96 @@ namespace RaikesSimplexService.DuckTheSystem
             return null;
         }
 
+        private void getPMatrices()
+        {
+            this.pMatrices = new List<Matrix<double>>();
+            List<double> lhsValues = new List<double>();
+            int across = this.model.Constraints[0].Coefficients.Length;
+            int down = this.model.Constraints.Count;
+            for (int i = 0; i < this.lhs.RowCount; i ++){
+                lhsValues.Add(lhs[i,0]);
+            }
+            for (int i = 0; i < across; i++)
+            {
+                if (!lhsValues.Contains(i)){
+                    double[,] p = new double[down,1];
+                    for (int j = 0; j < down; j++)
+                    {
+                        p[j, 0] = this.modelMatrix[j, i];
+                    }
+
+                    this.pMatrices.Add(Matrix<double>.Build.DenseOfArray(p));
+                }
+                
+                
+            }
+
+        }
+
+
+        private void createBMatrixAndZVector()
+        {
+            int across = lhs.RowCount;
+            int down = this.model.Constraints.Count;
+            double[,] bMatrix = new double[down, across];
+            double[,] z = new double[1, across];
+
+            for (int i = 0; i < across; i++)
+            {
+                
+                int lhsValue = (int)lhs[i,0];
+                var value = this.zRow[0, lhsValue];
+                z[0, i] = value;
+                for (var k = 0; k < down; k++)
+                {
+                    bMatrix[k, i] = this.modelMatrix[k, lhsValue];
+                    
+                }
+                
+
+            }
+            this.bMatrix = Matrix<double>.Build.DenseOfArray(bMatrix);
+            this.zVector = Matrix<double>.Build.DenseOfArray(z);
+        }
+
+        private void zVectorXPMatrix()
+        {
+            List<double> pPrimeList = new List<double>();
+            foreach(Matrix<double> p in this.pMatrices)
+            {
+                double pN = this.zVector.Multiply(p)[0,0];
+                pPrimeList.Add(pN);
+            }
+        }
+
+        private int getEnteringVariable()
+        {
+            double cPrime = double.MaxValue;
+            int index = -1;
+            List<double> lhsValues = new List<double>();
+            for (int i = 0; i < this.lhs.RowCount; i++)
+            {
+                lhsValues.Add(lhs[i, 0]);
+            }
+            for (int i = 0; i < this.model.Constraints[0].Coefficients.Length; i++)
+            {
+                if(!lhsValues.Contains(i)){
+                    var value = zRow[0, i] - (this.pPrimeList.ElementAt(i));
+                    if (value < cPrime)
+                    {
+                        cPrime = value;
+                        index = i;
+                    }
+                }
+            }
+
+            return index;
+            
+        }
+
+
+
+
         /// <summary>
         /// Calls the methods that will create our matrices and prepare
         /// out model for running the simplex method.
@@ -64,14 +169,15 @@ namespace RaikesSimplexService.DuckTheSystem
         /// <param name="model"></param>
         private void SetUpModel(Model model)
         {
-            this.model = model;
+            this.model = this.removeUnnecessaryConstraints(model);
             this.AddSlackSurplusVariables();
-            this.AddArtificialVariables();
+            //this.AddArtificialVariables();
             this.createRhs();
             this.createLhs();
             this.createZRow();
-            this.createWRow();
+            //this.createWRow();
             this.createModelMatrix();
+
         }
 
         /// <summary>
@@ -307,6 +413,38 @@ namespace RaikesSimplexService.DuckTheSystem
                     break;
             }
             return s;
+        }
+
+        /// <summary>
+        /// Overwrites model and gets rid of not-negative constraints
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public Model removeUnnecessaryConstraints(Model model)
+        {
+            Model matrixModel = model;
+            for (int j = 0; j < matrixModel.Constraints.Count; j++)
+            {
+                var c = matrixModel.Constraints.ElementAt(j);
+                if (c.Value == 0)
+                {
+                    int numVariables = 0;
+                    for (int i = 0; i < c.Coefficients.Length; i++)
+                    {
+                        if (c.Coefficients[i] != 0)
+                        {
+                            numVariables++;
+                        }
+                    }
+                    if (numVariables == 1)
+                    {
+                        matrixModel.Constraints.RemoveAt(j);
+                    }
+                }
+            }
+            this.model = matrixModel;
+            return matrixModel;
+            
         }
 
         /// <summary>

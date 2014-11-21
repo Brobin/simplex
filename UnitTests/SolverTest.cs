@@ -158,14 +158,14 @@ namespace UnitTests
             var constraint3 = new LinearConstraint()
             {
                 Coefficients = new double[] { 1, 0, 0 },
-                Relationship = Relationship.GreaterThanOrEquals,
+                Relationship = Relationship.LessThanOrEquals,
                 Value = 20
             };
             var constraint4 = new LinearConstraint()
             {
                 Coefficients = new double[] { 0, 1, 0 },
-                Relationship = Relationship.GreaterThanOrEquals,
-                Value = 0
+                Relationship = Relationship.LessThanOrEquals,
+                Value = 4
             };
             var constraints = new List<LinearConstraint>() { constraint1, constraint2, constraint3, constraint4 };
 
@@ -196,7 +196,20 @@ namespace UnitTests
 
             System.Diagnostics.Debug.WriteLine("Z-Row" + solver.zRow.ToString());
 
-            System.Diagnostics.Debug.WriteLine("W-Row" + solver.wRow.ToString());
+            //System.Diagnostics.Debug.WriteLine("W-Row" + solver.wRow.ToString());
+
+            System.Diagnostics.Debug.WriteLine("B-Matrix" + solver.bMatrix.ToString());
+
+            System.Diagnostics.Debug.WriteLine("Z-Vector" + solver.zVector.ToString());
+
+            System.Diagnostics.Debug.WriteLine("B-Inverse" + solver.bInverse.ToString());
+
+            System.Diagnostics.Debug.WriteLine("XB' x RHS" + solver.xBPrime.ToString());
+
+            foreach(var x in solver.pMatrices)
+            {
+                System.Diagnostics.Debug.WriteLine("PMatrix" + x.ToString());
+            }
 
         }
 
