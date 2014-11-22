@@ -145,33 +145,27 @@ namespace UnitTests
         {
             var constraint1 = new LinearConstraint()
             {
-                Coefficients = new double[] { 50, 24, 6 },
+                Coefficients = new double[] { 2,1 },
                 Relationship = Relationship.LessThanOrEquals,
-                Value = 2400
+                Value = 32
             };
             var constraint2 = new LinearConstraint()
             {
-                Coefficients = new double[] { 30, 0, 33 },
+                Coefficients = new double[] { 1,1 },
                 Relationship = Relationship.LessThanOrEquals,
-                Value = 2100
+                Value = 18
             };
             var constraint3 = new LinearConstraint()
             {
-                Coefficients = new double[] { 1, 0, 0 },
+                Coefficients = new double[] { 1,3 },
                 Relationship = Relationship.LessThanOrEquals,
-                Value = 20
+                Value = 36
             };
-            var constraint4 = new LinearConstraint()
-            {
-                Coefficients = new double[] { 0, 1, 0 },
-                Relationship = Relationship.LessThanOrEquals,
-                Value = 4
-            };
-            var constraints = new List<LinearConstraint>() { constraint1, constraint2, constraint3, constraint4 };
+            var constraints = new List<LinearConstraint>() { constraint1, constraint2, constraint3};
 
             var goal = new Goal()
             {
-                Coefficients = new double[] { 1, 1, 1 },
+                Coefficients = new double[] { 80,70 },
                 ConstantTerm = 0
             };
 
@@ -189,27 +183,24 @@ namespace UnitTests
             solver.Solve(model);
 
             System.Diagnostics.Debug.WriteLine("Model" + solver.modelMatrix.ToString());
-
+            /**
             System.Diagnostics.Debug.WriteLine("RHS" + solver.rhs.ToString());
 
             System.Diagnostics.Debug.WriteLine("LHS" + solver.lhs.ToString());
 
             System.Diagnostics.Debug.WriteLine("Z-Row" + solver.zRow.ToString());
 
-            //System.Diagnostics.Debug.WriteLine("W-Row" + solver.wRow.ToString());
 
             System.Diagnostics.Debug.WriteLine("B-Matrix" + solver.bMatrix.ToString());
 
             System.Diagnostics.Debug.WriteLine("Z-Vector" + solver.zVector.ToString());
 
-            System.Diagnostics.Debug.WriteLine("B-Inverse" + solver.bInverse.ToString());
 
             System.Diagnostics.Debug.WriteLine("XB' x RHS" + solver.xBPrime.ToString());
-
-            foreach(var x in solver.pMatrices)
-            {
-                System.Diagnostics.Debug.WriteLine("PMatrix" + x.ToString());
-            }
+            System.Diagnostics.Debug.WriteLine("Entering: " + solver.Entering.ToString());
+            System.Diagnostics.Debug.WriteLine("Exiting: " + solver.exiting.ToString());
+            **/
+            System.Diagnostics.Debug.WriteLine(solver.solution.DuckString());
 
         }
 
