@@ -92,5 +92,18 @@ namespace RaikesSimplexService.DuckTheSystem
                     return "=";
             }
         }
+
+        public static string DuckString(this Solution solution)
+        {
+            string output = "";
+            var counter = 1;
+            foreach(double d in solution.Decisions)
+            {
+                output += "x" + counter + ": " + d + "\n";
+                counter++;
+            }
+            output += "Optimal: " + solution.OptimalValue;
+            return output;
+        }
     }
 }
