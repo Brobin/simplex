@@ -128,10 +128,16 @@ namespace RaikesSimplexService.DuckTheSystem
         private Solution compileSolution()
         {
             int variables = this.modelMatrix.ColumnCount - this.sVariables;
+            //double[] Decisions = new double[variables];
+            //for(int i = 0; i < variables; i++)
+            int constraints = this.modelMatrix.RowCount;
             double[] Decisions = new double[variables];
-            for(int i = 0; i < variables; i++)
+            for (int i = 0; i < constraints; i++)
             {
-                Decisions[i] = this.xBPrime[(int)this.lhs[i,0],0];
+                if (lhs[i,0] >= 0 && lhs[i,0] <= variables -1) {
+                    //its switching x and y for some reason
+                    Decisions[i] = this.xBPrime[(int)this.lhs[i, 0], 0];
+                }
             }
             double OptimalValue = 0;
             double[] coeff = this.model.Goal.Coefficients;
@@ -148,6 +154,7 @@ namespace RaikesSimplexService.DuckTheSystem
             };
             return solution;
         }
+
 
         private void extractZRow()
         {
