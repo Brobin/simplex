@@ -50,8 +50,8 @@ namespace RaikesSimplexService.DuckTheSystem
             this.AddSlackSurplusVariables();
             this.AddArtificialVariables();
             this.createZRow();
-            this.createWRow();
             this.createModelMatrix();
+            this.createWRow();
             this.createRhs();
             this.createLhs();
         }
@@ -462,17 +462,16 @@ namespace RaikesSimplexService.DuckTheSystem
         public void createWRow()
         {
             int numConstraints = this.model.Constraints.Count;
-            int numAVars = countAVariables();
-            int numVars = model.Constraints.ElementAt(0).Coefficients.Length;
+            //int numAVars = countAVariables();
+            int numVars = modelMatrix.ColumnCount;
             double[,] wRow2 = new double[1,numVars];
-            for (int i = 0; i < numVars; i++)
+            for (int i = 0; i < numVars - aVariables; i++)
             {
                 double wCoeff = 0;
                 for (int j = 0; j < numConstraints; j++)
                 {
                     double aValue = 0;
-                    for (int k = this.modelMatrix.ColumnCount - aVariables; 
-                        k < this.modelMatrix.ColumnCount; k++)
+                    for (int k = numVars - aVariables; k < numVars; k++)
                     {
                         aValue += this.modelMatrix[j, k];
                     }
