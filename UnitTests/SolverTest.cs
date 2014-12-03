@@ -69,8 +69,8 @@ namespace UnitTests
         /// <summary>
         ///A test for Solve
         ///</summary>
-        [TestMethod]
-  /**      public void ExampleSolveTest()
+      /**  [TestMethod]
+     public void ExampleSolveTest()
         {
             #region Arrange           
 
@@ -137,35 +137,47 @@ namespace UnitTests
             CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
             Assert.AreEqual(expected.Quality, actual.Quality);
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
-        } 
-   **/
+        } **/
 
-       // [TestMethod]
+       [TestMethod]
         public void PrintTest()
         {
             var constraint1 = new LinearConstraint()
             {
-                Coefficients = new double[] { 2,1 },
+                Coefficients = new double[] { 1,1 },
                 Relationship = Relationship.LessThanOrEquals,
-                Value = 32
+                Value = 1
             };
             var constraint2 = new LinearConstraint()
             {
-                Coefficients = new double[] { 1,1 },
-                Relationship = Relationship.LessThanOrEquals,
-                Value = 18
+                Coefficients = new double[] { 2,-1 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 1
             };
             var constraint3 = new LinearConstraint()
             {
-                Coefficients = new double[] { 1,3 },
+                Coefficients = new double[] { 0,3 },
                 Relationship = Relationship.LessThanOrEquals,
-                Value = 36
+                Value = 2
             };
-            var constraints = new List<LinearConstraint>() { constraint1, constraint2, constraint3};
+            var constraint4 = new LinearConstraint()
+            {
+                Coefficients = new double[] { 1, 0 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 0
+            };
+            var constraint5 = new LinearConstraint()
+            {
+                Coefficients = new double[] { 0, 1 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 0
+            };
+            var constraints = new List<LinearConstraint>() { constraint1, constraint2, constraint3, 
+                constraint4, constraint5};
 
             var goal = new Goal()
             {
-                Coefficients = new double[] { 80,70 },
+                Coefficients = new double[] { 6,3 },
                 ConstantTerm = 0
             };
 
@@ -202,20 +214,6 @@ namespace UnitTests
             **/
             System.Diagnostics.Debug.WriteLine(solver.solution.DuckString());
 
-        }
-
-        [TestMethod]
-        public void MatrixInverseTest()
-        {
-            double[,] test = {
-                                 {1,1,1},
-                                 {0,2,1},
-                                 {3,0,1}
-                             };
-            var M = Matrix<double>.Build.DenseOfArray(test);
-            var inverse = M.Inverse();
-            System.Diagnostics.Debug.WriteLine(M.ToString());
-            System.Diagnostics.Debug.WriteLine(inverse.ToString());
         }
 
 
