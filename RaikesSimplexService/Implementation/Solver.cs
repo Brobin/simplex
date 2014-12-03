@@ -134,9 +134,10 @@ namespace RaikesSimplexService.DuckTheSystem
             double[] Decisions = new double[variables];
             for (int i = 0; i < constraints; i++)
             {
-                if (lhs[i,0] >= 0 && lhs[i,0] <= variables -1) {
+                int columnNum = (int)this.lhs[i, 0];
+                if (columnNum < variables) {
                     //its switching x and y for some reason
-                    Decisions[i] = this.xBPrime[(int)this.lhs[i, 0], 0];
+                    Decisions[columnNum] = this.xBPrime[columnNum, 0];
                 }
             }
             double OptimalValue = 0;
