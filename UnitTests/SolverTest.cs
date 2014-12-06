@@ -69,7 +69,7 @@ namespace UnitTests
         /// <summary>
         ///A test for Solve
         ///</summary>
-    /**    [TestMethod]
+     [TestMethod]
      public void ExampleSolveTest()
         {
             #region Arrange           
@@ -129,15 +129,20 @@ namespace UnitTests
 
             //Act
 
-            var target = new Solver();
-            var actual = target.Solve(model);
+            var solver = new Solver();
+            var actual = solver.Solve(model);
 
+            #region Print lines
+            System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+            System.Diagnostics.Debug.WriteLine(solver.DuckString());
+            System.Diagnostics.Debug.WriteLine(actual.DuckString());
+            #endregion
 
             //Assert
             CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
             Assert.AreEqual(expected.Quality, actual.Quality);
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
-        } **/
+        }
 
        [TestMethod]
         public void Test1()
@@ -191,35 +196,13 @@ namespace UnitTests
                 AlternateSolutionsExist = false,
                 OptimalValue = 6
             };
-            var target = new Solver();
-            var actual = target.Solve(model);
-                      
+            var solver = new Solver();
+            var actual = solver.Solve(model);
+
             #region Print lines
-            //System.Diagnostics.Debug.WriteLine(model.DuckString(true));
-
-            //var solver = new Solver();
-
-            //solver.Solve(model);
-
-           // System.Diagnostics.Debug.WriteLine("Model" + solver.modelMatrix.ToString());
-            /**
-            System.Diagnostics.Debug.WriteLine("RHS" + solver.rhs.ToString());
-
-            System.Diagnostics.Debug.WriteLine("LHS" + solver.lhs.ToString());
-
-            System.Diagnostics.Debug.WriteLine("Z-Row" + solver.zRow.ToString());
-
-
-            System.Diagnostics.Debug.WriteLine("B-Matrix" + solver.bMatrix.ToString());
-
-            System.Diagnostics.Debug.WriteLine("Z-Vector" + solver.zVector.ToString());
-
-
-            System.Diagnostics.Debug.WriteLine("XB' x RHS" + solver.xBPrime.ToString());
-            System.Diagnostics.Debug.WriteLine("Entering: " + solver.Entering.ToString());
-            System.Diagnostics.Debug.WriteLine("Exiting: " + solver.exiting.ToString());
-          // System.Diagnostics.Debug.WriteLine(actual.DuckString());
-            **/
+            System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+            System.Diagnostics.Debug.WriteLine(solver.DuckString());
+            System.Diagnostics.Debug.WriteLine(actual.DuckString());
             #endregion
 
             CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
@@ -290,31 +273,10 @@ namespace UnitTests
 
            #region Print lines
            System.Diagnostics.Debug.WriteLine(model.DuckString(true));
-
-           //var solver = new Solver();
-
-           //solver.Solve(model);
-
-           // System.Diagnostics.Debug.WriteLine("Model" + solver.modelMatrix.ToString());
-           
-           System.Diagnostics.Debug.WriteLine("RHS" + solver.rhs.ToString());
-
-           System.Diagnostics.Debug.WriteLine("LHS" + solver.lhs.ToString());
-
-           System.Diagnostics.Debug.WriteLine("Z-Row" + solver.zRow.ToString());
-
-
-           System.Diagnostics.Debug.WriteLine("B-Matrix" + solver.bMatrix.ToString());
-
-           System.Diagnostics.Debug.WriteLine("Z-Vector" + solver.zVector.ToString());
-
-
-           System.Diagnostics.Debug.WriteLine("XB' x RHS" + solver.xBPrime.ToString());
-           System.Diagnostics.Debug.WriteLine("Entering: " + solver.Entering.ToString());
-           System.Diagnostics.Debug.WriteLine("Exiting: " + solver.exiting.ToString());
+           System.Diagnostics.Debug.WriteLine(solver.DuckString());
            System.Diagnostics.Debug.WriteLine(actual.DuckString());
-           
            #endregion
+
            CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
            Assert.AreEqual(expected.Quality, actual.Quality);
            Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
@@ -360,8 +322,14 @@ namespace UnitTests
                AlternateSolutionsExist = false,
                OptimalValue = 50
            };
-           var target = new Solver();
-           var actual = target.Solve(model);
+           var solver = new Solver();
+           var actual = solver.Solve(model);
+
+           #region Print lines
+           System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+           System.Diagnostics.Debug.WriteLine(solver.DuckString());
+           System.Diagnostics.Debug.WriteLine(actual.DuckString());
+           #endregion
 
            CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
            Assert.AreEqual(expected.Quality, actual.Quality);

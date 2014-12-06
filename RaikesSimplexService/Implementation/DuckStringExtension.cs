@@ -105,5 +105,19 @@ namespace RaikesSimplexService.DuckTheSystem
             output += "Optimal: " + solution.OptimalValue;
             return output;
         }
+
+        public static string DuckString(this Solver solver)
+        {
+            var output = "Model: " + solver.modelMatrix.ToString();
+            output  += "RHS" + solver.rhs.ToString();
+            output += "\nLHS" + solver.lhs.ToString();
+            output += "\nZ-Row" + solver.zRow.ToString();
+            output += "\nB-Matrix" + solver.bMatrix.ToString();
+            output += "\nZ-Vector" + solver.zVector.ToString();
+            output += "\nXB' x RHS" + solver.xBPrime.ToString();
+            output += "\nEntering: " + solver.Entering.ToString();
+            output += "\nExiting: " + solver.exiting.ToString();
+            return output;
+        }
     }
 }

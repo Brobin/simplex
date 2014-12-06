@@ -81,26 +81,20 @@ namespace RaikesSimplexService.DuckTheSystem
                 while (wloop)
                 {
                     this.createBMatrixAndZVector();
-                    Matrix<double> testBMatrix = this.bMatrix;
                     this.bInverse = this.bMatrix.Inverse();
                     this.xBPrime = this.bInverse.Multiply(this.rhs);
                     this.getPMatrices();
-                    List<Matrix<double>> testPMatrices = this.pMatrices;
                     this.zVectorXPMatrix();
                     wloop = this.getEnteringVariable();
-                    double testEntering = this.Entering;
                     if (wloop)
                     {
                         this.getExitingVariable();
-                        double testExiting = this.exiting;
                         this.updateLhs(this.Entering, this.exiting);
-                        Matrix<double> testLHS = this.lhs;
                     }
                 }
+                twoPhase = false;
                 this.extractZRowAndColumn();
                 this.getNewModelMatrix();
-                Matrix<double> testModelMatrix = this.modelMatrix;
-                twoPhase = false;
                 this.createLhs();
             }
     //SECOND SHIT
@@ -109,19 +103,15 @@ namespace RaikesSimplexService.DuckTheSystem
             while(loop)
             {
                 this.createBMatrixAndZVector();
-                Matrix<double> testbMatrix = this.bMatrix;
-                Matrix<double> testZVector = this.zVector;
                 this.bInverse = this.bMatrix.Inverse();
                 this.xBPrime = this.bInverse.Multiply(this.rhs);
                 this.getPMatrices();
-                List<Matrix<double>> testPMatrices = this.pMatrices;
                 this.zVectorXPMatrix();
                 loop = this.getEnteringVariable();
                 double testEntering = this.Entering;
                 if(loop)
                 {
                     this.getExitingVariable();
-                    double testExiting = this.exiting;
                     this.updateLhs(this.Entering, this.exiting);
                 }
             }
@@ -190,7 +180,6 @@ namespace RaikesSimplexService.DuckTheSystem
             var length = this.modelMatrix.ColumnCount - 1 - aVariables;
             var depth = this.modelMatrix.RowCount - 1;
             double[,] newMatrix = new double[depth, length];
-            double[,] newLhs = new double[depth, 1];
             double[,] newRhs = new double[depth, 1];
             for (int i = 0; i < depth; i++ )
             {
@@ -198,11 +187,9 @@ namespace RaikesSimplexService.DuckTheSystem
                 {
                     newMatrix[i,j] = this.modelMatrix[i,j];
                 }
-                newLhs[i, 0] = this.lhs[i, 0];
                 newRhs[i, 0] = this.rhs[i, 0];
             }
             this.modelMatrix = Matrix<double>.Build.DenseOfArray(newMatrix);
-            this.lhs = Matrix<double>.Build.DenseOfArray(newLhs);
             this.rhs = Matrix<double>.Build.DenseOfArray(newRhs);
         }
 
