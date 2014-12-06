@@ -100,11 +100,8 @@ namespace RaikesSimplexService.DuckTheSystem
                 this.extractZRowAndColumn();
                 this.getNewModelMatrix();
                 Matrix<double> testModelMatrix = this.modelMatrix;
-                //this.getNewLHS();
+                twoPhase = false;
                 this.createLhs();
-                Matrix<double> testNewLHS = this.lhs;
-                this.getNewRHS();
-                Matrix<double> testRHS = this.rhs;
             }
     //SECOND SHIT
             twoPhase = false;
@@ -148,15 +145,13 @@ namespace RaikesSimplexService.DuckTheSystem
         private Solution compileSolution()
         {
             int variables = this.modelMatrix.ColumnCount - this.sVariables;
-            //double[] Decisions = new double[variables];
-            //for(int i = 0; i < variables; i++)
             int constraints = this.modelMatrix.RowCount;
             double[] Decisions = new double[variables];
             for (int i = 0; i < constraints; i++)
             {
                 int columnNum = (int)this.lhs[i, 0];
-                if (columnNum < variables) {
-                    //its switching x and y for some reason
+                if (columnNum < variables)
+                {
                     Decisions[columnNum] = this.xBPrime[columnNum, 0];
                 }
             }
@@ -192,27 +187,23 @@ namespace RaikesSimplexService.DuckTheSystem
 
         private void getNewModelMatrix()
         {
-            //remove last row and artificial variables
-            int length = this.modelMatrix.ColumnCount - aVariables;
-            int depth = this.model.Constraints.Count;
-            double[,] newModelMatrix = new double[depth, length];
-            for (int i = 0; i < length; i++)
+            var length = this.modelMatrix.ColumnCount - 1 - aVariables;
+            var depth = this.modelMatrix.RowCount - 1;
+            double[,] newMatrix = new double[depth, length];
+            double[,] newLhs = new double[depth, 1];
+            double[,] newRhs = new double[depth, 1];
+            for (int i = 0; i < depth; i++ )
             {
-                for (int j = 0; j < depth; j++)
+                for(int j = 0; j < length; j++)
                 {
-                    newModelMatrix[j, i] = this.modelMatrix[j, i];
+                    newMatrix[i,j] = this.modelMatrix[i,j];
                 }
+                newLhs[i, 0] = this.lhs[i, 0];
+                newRhs[i, 0] = this.rhs[i, 0];
             }
-            this.modelMatrix = Matrix<double>.Build.DenseOfArray(newModelMatrix);
-        }
-
-        private void getNewLHS() {
-            this.lhs = this.lhs.RemoveRow(this.lhs.RowCount - 1);
-        }
-
-        private void getNewRHS()
-        {
-            this.rhs = this.rhs.RemoveRow(this.rhs.RowCount - 1);
+            this.modelMatrix = Matrix<double>.Build.DenseOfArray(newMatrix);
+            this.lhs = Matrix<double>.Build.DenseOfArray(newLhs);
+            this.rhs = Matrix<double>.Build.DenseOfArray(newRhs);
         }
 
         private void updateLhs(int entering, int exiting)
@@ -497,7 +488,7 @@ namespace RaikesSimplexService.DuckTheSystem
             int numConstraints = this.model.Constraints.Count;
             //int numAVars = countAVariables();
             int numVars = modelMatrix.ColumnCount;
-            double[,] wRow2 = new double[1,numVars+1];
+            double[,] wRow2 = new double[1,numVars];
             for (int i = 0; i < numVars - aVariables; i++)
             {
                 double wCoeff = 0;
@@ -533,7 +524,7 @@ namespace RaikesSimplexService.DuckTheSystem
                 {
                     var current = modelMatrix[rows, columns];
                     var found = false;
-                    if(current == 1 || (this.aVariables == 0 && current == -1))
+                    if(current == 1 || (!twoPhase && current == -1))
                     {
                         found = true;
                         int k = 0;
@@ -552,7 +543,6 @@ namespace RaikesSimplexService.DuckTheSystem
                     }
                     if (found) {
                         lhs[rows, 0] = columns;
-                        break;
                     }
                 }
             }
