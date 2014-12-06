@@ -69,7 +69,7 @@ namespace UnitTests
         /// <summary>
         ///A test for Solve
         ///</summary>
-      /**  [TestMethod]
+    /**    [TestMethod]
      public void ExampleSolveTest()
         {
             #region Arrange           
@@ -116,8 +116,7 @@ namespace UnitTests
                 Goal = goal,
                 GoalKind = GoalKind.Minimize
             };
-
-            var target = new Solver(); 
+ 
 
             var expected = new Solution()
             {
@@ -130,6 +129,7 @@ namespace UnitTests
 
             //Act
 
+            var target = new Solver();
             var actual = target.Solve(model);
 
 
@@ -140,61 +140,68 @@ namespace UnitTests
         } **/
 
        [TestMethod]
-        public void PrintTest()
+        public void Test1()
         {
-            var constraint1 = new LinearConstraint()
+            var constraints = new List<LinearConstraint>();
+            constraints.Add(new LinearConstraint()
             {
-                Coefficients = new double[] { 1,1 },
+                Coefficients = new double[] { 1, 1 },
                 Relationship = Relationship.LessThanOrEquals,
                 Value = 1
-            };
-            var constraint2 = new LinearConstraint()
+            });
+            constraints.Add(new LinearConstraint()
             {
                 Coefficients = new double[] { 2,-1 },
                 Relationship = Relationship.GreaterThanOrEquals,
                 Value = 1
-            };
-            var constraint3 = new LinearConstraint()
+            });
+            constraints.Add(new LinearConstraint()
             {
                 Coefficients = new double[] { 0,3 },
                 Relationship = Relationship.LessThanOrEquals,
                 Value = 2
-            };
-            var constraint4 = new LinearConstraint()
+            });
+            constraints.Add(new LinearConstraint()
             {
                 Coefficients = new double[] { 1, 0 },
                 Relationship = Relationship.GreaterThanOrEquals,
                 Value = 0
-            };
-            var constraint5 = new LinearConstraint()
+            });
+            constraints.Add(new LinearConstraint()
             {
                 Coefficients = new double[] { 0, 1 },
                 Relationship = Relationship.GreaterThanOrEquals,
                 Value = 0
-            };
-            var constraints = new List<LinearConstraint>() { constraint1, constraint2, constraint3, 
-                constraint4, constraint5};
-
+            });
             var goal = new Goal()
             {
                 Coefficients = new double[] { 6,3 },
                 ConstantTerm = 0
             };
-
             var model = new Model()
             {
                 Constraints = constraints,
                 Goal = goal,
                 GoalKind = GoalKind.Maximize
             };
+            var expected = new Solution()
+            {
+                Decisions = new double[2] { 1, 0 },
+                Quality = SolutionQuality.Optimal,
+                AlternateSolutionsExist = false,
+                OptimalValue = 6
+            };
+            var target = new Solver();
+            var actual = target.Solve(model);
+                      
+            #region Print lines
+            //System.Diagnostics.Debug.WriteLine(model.DuckString(true));
 
-            System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+            //var solver = new Solver();
 
-            var solver = new Solver();
+            //solver.Solve(model);
 
-            solver.Solve(model);
-
-            System.Diagnostics.Debug.WriteLine("Model" + solver.modelMatrix.ToString());
+           // System.Diagnostics.Debug.WriteLine("Model" + solver.modelMatrix.ToString());
             /**
             System.Diagnostics.Debug.WriteLine("RHS" + solver.rhs.ToString());
 
@@ -211,11 +218,154 @@ namespace UnitTests
             System.Diagnostics.Debug.WriteLine("XB' x RHS" + solver.xBPrime.ToString());
             System.Diagnostics.Debug.WriteLine("Entering: " + solver.Entering.ToString());
             System.Diagnostics.Debug.WriteLine("Exiting: " + solver.exiting.ToString());
+          // System.Diagnostics.Debug.WriteLine(actual.DuckString());
             **/
-            System.Diagnostics.Debug.WriteLine(solver.solution.DuckString());
+            #endregion
 
+            CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
+            Assert.AreEqual(expected.Quality, actual.Quality);
+            Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
 
+       [TestMethod]
+       public void Test2()
+       {
+           var constraints = new List<LinearConstraint>();
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 1, 1, 1 },
+               Relationship = Relationship.LessThanOrEquals,
+               Value = 40
+           });
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 2, 1, -1 },
+               Relationship = Relationship.GreaterThanOrEquals,
+               Value = 10
+           });
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 0, -1, 1 },
+               Relationship = Relationship.GreaterThanOrEquals,
+               Value = 10
+           });
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 1, 0, 0 },
+               Relationship = Relationship.GreaterThanOrEquals,
+               Value = 0
+           });
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 0, 1, 0 },
+               Relationship = Relationship.GreaterThanOrEquals,
+               Value = 0
+           });
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 0, 0, 1 },
+               Relationship = Relationship.GreaterThanOrEquals,
+               Value = 0
+           });
+           var goal = new Goal()
+           {
+               Coefficients = new double[] { 2, 3, 1 },
+               ConstantTerm = 0
+           };
+           var model = new Model()
+           {
+               Constraints = constraints,
+               Goal = goal,
+               GoalKind = GoalKind.Maximize
+           };
+           var expected = new Solution()
+           {
+               Decisions = new double[3] { 10, 10, 20 },
+               Quality = SolutionQuality.Optimal,
+               AlternateSolutionsExist = false,
+               OptimalValue = 70
+           };
+           var solver = new Solver();
+           var actual = solver.Solve(model);
 
+           #region Print lines
+           System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+
+           //var solver = new Solver();
+
+           //solver.Solve(model);
+
+           // System.Diagnostics.Debug.WriteLine("Model" + solver.modelMatrix.ToString());
+           
+           System.Diagnostics.Debug.WriteLine("RHS" + solver.rhs.ToString());
+
+           System.Diagnostics.Debug.WriteLine("LHS" + solver.lhs.ToString());
+
+           System.Diagnostics.Debug.WriteLine("Z-Row" + solver.zRow.ToString());
+
+
+           System.Diagnostics.Debug.WriteLine("B-Matrix" + solver.bMatrix.ToString());
+
+           System.Diagnostics.Debug.WriteLine("Z-Vector" + solver.zVector.ToString());
+
+
+           System.Diagnostics.Debug.WriteLine("XB' x RHS" + solver.xBPrime.ToString());
+           System.Diagnostics.Debug.WriteLine("Entering: " + solver.Entering.ToString());
+           System.Diagnostics.Debug.WriteLine("Exiting: " + solver.exiting.ToString());
+           System.Diagnostics.Debug.WriteLine(actual.DuckString());
+           
+           #endregion
+           CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
+           Assert.AreEqual(expected.Quality, actual.Quality);
+           Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
+       }
+
+       [TestMethod]
+       public void SinglePhaseTest()
+       {
+           var constraints = new List<LinearConstraint>();
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 10, 5 },
+               Relationship = Relationship.LessThanOrEquals,
+               Value = 50
+           });
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 6, 6},
+               Relationship = Relationship.LessThanOrEquals,
+               Value = 36
+           });
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 4.5, 18},
+               Relationship = Relationship.LessThanOrEquals,
+               Value = 81
+           });
+           var goal = new Goal()
+           {
+               Coefficients = new double[] { 9, 7},
+               ConstantTerm = 0
+           };
+           var model = new Model()
+           {
+               Constraints = constraints,
+               Goal = goal,
+               GoalKind = GoalKind.Maximize
+           };
+           var expected = new Solution()
+           {
+               Decisions = new double[2] { 4, 2 },
+               Quality = SolutionQuality.Optimal,
+               AlternateSolutionsExist = false,
+               OptimalValue = 50
+           };
+           var target = new Solver();
+           var actual = target.Solve(model);
+
+           CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
+           Assert.AreEqual(expected.Quality, actual.Quality);
+           Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
+       }
     }
 }
