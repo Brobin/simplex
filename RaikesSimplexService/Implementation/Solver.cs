@@ -78,13 +78,13 @@ namespace RaikesSimplexService.DuckTheSystem
                 this.zRow = this.wRow;
                 //solve using wrow
                 bool wloop = true;
+
+                System.Diagnostics.Debug.WriteLine(this.modelMatrix.ToString());
+                System.Diagnostics.Debug.WriteLine(this.rhs.ToString());
+                System.Diagnostics.Debug.WriteLine(this.zRow.ToString());
                 while (wloop)
                 {
                     this.createBMatrixAndZVector();
-                    System.Diagnostics.Debug.WriteLine(this.modelMatrix.ToString());
-                    System.Diagnostics.Debug.WriteLine(this.bMatrix.ToString());
-                    System.Diagnostics.Debug.WriteLine(this.lhs.ToString());
-                    System.Diagnostics.Debug.WriteLine(this.rhs.ToString());
                     this.bInverse = this.bMatrix.Inverse();
                     this.xBPrime = this.bInverse.Multiply(this.rhs);
                     this.getPMatrices();
@@ -119,7 +119,7 @@ namespace RaikesSimplexService.DuckTheSystem
                     this.updateLhs(this.Entering, this.exiting);
                 }
             }
-
+            this.sortLhs(this.lhs);
             this.solution = this.compileSolution();
 
             // 3. For each non basic variable
@@ -171,11 +171,11 @@ namespace RaikesSimplexService.DuckTheSystem
             int length = modelMatrix.ColumnCount - aVariables -1;
             int depth = model.Constraints.Count;
             double[,] newZRow = new double[1, length];
-            for (int i = 0; i < length; i++)
+            for (int i = 1; i < length+1; i++)
             {
-                newZRow[0, i] = this.modelMatrix[depth, i];
+                newZRow[0, i-1] = this.modelMatrix[depth, i];
             }
-            this.modelMatrix.RemoveColumn(modelMatrix.ColumnCount-1);
+            this.modelMatrix.RemoveColumn(0);
             this.zRow = Matrix<double>.Build.DenseOfArray(newZRow);
         }
 
@@ -187,9 +187,9 @@ namespace RaikesSimplexService.DuckTheSystem
             double[,] newRhs = new double[depth, 1];
             for (int i = 0; i < depth; i++ )
             {
-                for(int j = 0; j < length; j++)
+                for(int j = 1; j < length+1; j++)
                 {
-                    newMatrix[i,j] = this.modelMatrix[i,j];
+                    newMatrix[i,j-1] = this.modelMatrix[i,j];
                 }
                 newRhs[i, 0] = this.rhs[i, 0];
             }
@@ -200,6 +200,16 @@ namespace RaikesSimplexService.DuckTheSystem
         private void updateLhs(int entering, int exiting)
         {
             this.lhs[exiting, 0] = entering;
+            List<double> newLhs = new List<double>();
+            for(int i = 0; i < this.lhs.RowCount; i++)
+            {
+                newLhs.Add(this.lhs[i, 0]);
+            }
+            newLhs = this.sort(newLhs);
+            for(int i = 0; i < this.lhs.RowCount; i++)
+            {
+                this.lhs[i, 0] = newLhs.ElementAt(i);
+            }
         }
 
         private void getExitingVariable()
@@ -249,6 +259,48 @@ namespace RaikesSimplexService.DuckTheSystem
             }
         }
 
+        private void sortLhs(Matrix<double> lhs)
+        {
+            List<double> array = new List<double>();
+            for (int i = 0; i < lhs.RowCount; i++)
+            {
+                array.Add(lhs[i, 0]);
+            }
+            array = this.sort(array);
+            for (int i = 0; i < lhs.RowCount; i++)
+            {
+                lhs[i, 0] = array.ElementAt(i);
+            }
+            this.lhs = lhs;
+        }
+
+        private List<double> sort(List<double> array)
+        {
+            var rand = new Random();
+            if (array.Count > 1)
+            {
+                List<double> less = new List<double>();
+                List<double> equal = new List<double>();
+                List<double> greater = new List<double>();
+
+                int pivot = rand.Next(0, array.Count - 1);
+                double pivotValue = array[pivot];
+
+                foreach (double a in array)
+                {
+                    if (a < pivotValue)
+                        less.Add(a);
+                    else if (a == pivotValue)
+                        equal.Add(a);
+                    else if (a > pivotValue)
+                        greater.Add(a);
+                }
+                less = this.sort(less);
+                greater = this.sort(greater);
+                return less.Concat(equal).Concat(greater).ToList();
+            }
+            return array;
+        }
 
         private void createBMatrixAndZVector()
         {
@@ -256,10 +308,8 @@ namespace RaikesSimplexService.DuckTheSystem
             int down = this.modelMatrix.RowCount;
             double[,] bMatrix2 = new double[down, across];
             double[,] z = new double[1, across];
-
             for (int i = 0; i < across; i++)
             {
-                
                 int lhsValue = (int)lhs[i,0];
                 var value = this.zRow[0, lhsValue];
                 z[0, i] = value;
@@ -294,7 +344,8 @@ namespace RaikesSimplexService.DuckTheSystem
             {
                 lhsValues.Add(lhs[i, 0]);
             }
-            for (int i = 0; i < this.modelMatrix.ColumnCount-aVariables-1; i++)
+            System.Diagnostics.Debug.WriteLine(this.lhs.ToString());
+            for (int i = 0; i < this.modelMatrix.ColumnCount-aVariables; i++)
             {
                 if(!lhsValues.Contains(i)){
                     var value = zRow[0, i] - (this.pPrimeList.ElementAt(i));
@@ -434,42 +485,59 @@ namespace RaikesSimplexService.DuckTheSystem
 
 
         }
-        
-        public void createModelMatrix()
+
+        private void twoPhaseModelMatrix()
         {
             int lengthOfConstraint = this.model.Constraints[0].Coefficients.Length;
             int NumberofConstraints = this.model.Constraints.Count;
-            double[,] modelMatrix2;
-            if(aVariables!= 0){
-                modelMatrix2 = new double[NumberofConstraints+1, lengthOfConstraint+1];
-            } else {
-                modelMatrix2 = new double[NumberofConstraints, lengthOfConstraint];
-            }
+            double[,] modelMatrix2 = new double[NumberofConstraints+1, lengthOfConstraint+1];
             var zCount = 0;
+            for (int i = 1; i < lengthOfConstraint+1; i++)
+            {
+                for (int j = 0; j < NumberofConstraints; j++)
+                {
+                    modelMatrix2[j, i] = this.model.Constraints[j].Coefficients[i-1];
+                }
+                if (zCount < lengthOfConstraint - aVariables)
+                {
+                    modelMatrix2[NumberofConstraints, i] = this.zRow[0, i-1];
+                    zCount++;
+                }
+                else
+                {
+                    modelMatrix2[NumberofConstraints, i] = 0;
+                }
+            }
+            for (int i = 0; i < NumberofConstraints; i++)
+            {
+                modelMatrix2[i, 0] = 0;
+            }
+            modelMatrix2[NumberofConstraints, 0] = 1;
+            this.modelMatrix = Matrix<double>.Build.DenseOfArray(modelMatrix2);
+        }
+
+        private void singlePhaseModelMatrix()
+        {
+            int lengthOfConstraint = this.model.Constraints[0].Coefficients.Length;
+            int NumberofConstraints = this.model.Constraints.Count;
+            double[,] modelMatrix2 = new double[NumberofConstraints, lengthOfConstraint];
             for (int i = 0; i < lengthOfConstraint; i++)
             {
                 for (int j = 0; j < NumberofConstraints; j++)
                 {
                     modelMatrix2[j, i] = this.model.Constraints[j].Coefficients[i];
                 }
-                if(twoPhase)
-                {
-                    if (zCount < lengthOfConstraint - aVariables)
-                    {
-                        modelMatrix2[NumberofConstraints, i] = this.zRow[0, i];
-                        zCount++;
-                    }
-                    else
-                    {
-                        modelMatrix2[NumberofConstraints, i] = 0;
-                    }
-                    if (i + 1 == lengthOfConstraint)
-                    {
-                        modelMatrix2[NumberofConstraints, i + 1] = 1;
-                    }
-                }
             }
             this.modelMatrix = Matrix<double>.Build.DenseOfArray(modelMatrix2);
+        }
+        
+        public void createModelMatrix()
+        {
+            if(aVariables!= 0){
+                this.twoPhaseModelMatrix();
+            } else {
+                this.singlePhaseModelMatrix();
+            }
         }
         /// <summary>
         /// Creates the W Row for the first phase of the two phase simplex method
@@ -538,7 +606,8 @@ namespace RaikesSimplexService.DuckTheSystem
                     }
                 }
             }
-            this.lhs = Matrix<double>.Build.DenseOfArray(lhs); 
+            var x = Matrix<double>.Build.DenseOfArray(lhs);
+            this.sortLhs(x);
         }
 
         /// <summary>

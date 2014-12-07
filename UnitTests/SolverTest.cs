@@ -335,5 +335,59 @@ namespace UnitTests
            Assert.AreEqual(expected.Quality, actual.Quality);
            Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
        }
+
+       [TestMethod]
+       public void SinglePhaseTest2()
+       {
+           var constraints = new List<LinearConstraint>();
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 1,1 },
+               Relationship = Relationship.LessThanOrEquals,
+               Value = 35
+           });
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 1,2 },
+               Relationship = Relationship.LessThanOrEquals,
+               Value = 38
+           });
+           constraints.Add(new LinearConstraint()
+           {
+               Coefficients = new double[] { 2,2 },
+               Relationship = Relationship.LessThanOrEquals,
+               Value = 50
+           });
+           var goal = new Goal()
+           {
+               Coefficients = new double[] { 350, 450 },
+               ConstantTerm = 0
+           };
+           var model = new Model()
+           {
+               Constraints = constraints,
+               Goal = goal,
+               GoalKind = GoalKind.Maximize
+           };
+           var expected = new Solution()
+           {
+               Decisions = new double[2] { 12,13 },
+               Quality = SolutionQuality.Optimal,
+               AlternateSolutionsExist = false,
+               OptimalValue = 10050
+           };
+           var solver = new Solver();
+           var actual = solver.Solve(model);
+
+           #region Print lines
+           System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+           System.Diagnostics.Debug.WriteLine(solver.DuckString());
+           System.Diagnostics.Debug.WriteLine(actual.DuckString());
+           #endregion
+
+           CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
+           Assert.AreEqual(expected.Quality, actual.Quality);
+           Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
+       }
     }
 }
