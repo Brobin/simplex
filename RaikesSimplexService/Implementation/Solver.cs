@@ -52,7 +52,7 @@ namespace RaikesSimplexService.DuckTheSystem
             this.AddArtificialVariables();
             if (aVariables > 0)
             {
-                twoPhase = true;
+                this.twoPhase = true;
             }
             this.createZRow();
             this.createModelMatrix();
@@ -81,6 +81,10 @@ namespace RaikesSimplexService.DuckTheSystem
                 while (wloop)
                 {
                     this.createBMatrixAndZVector();
+                    System.Diagnostics.Debug.WriteLine(this.modelMatrix.ToString());
+                    System.Diagnostics.Debug.WriteLine(this.bMatrix.ToString());
+                    System.Diagnostics.Debug.WriteLine(this.lhs.ToString());
+                    System.Diagnostics.Debug.WriteLine(this.rhs.ToString());
                     this.bInverse = this.bMatrix.Inverse();
                     this.xBPrime = this.bInverse.Multiply(this.rhs);
                     this.getPMatrices();
@@ -530,6 +534,7 @@ namespace RaikesSimplexService.DuckTheSystem
                     }
                     if (found) {
                         lhs[rows, 0] = columns;
+                        break;
                     }
                 }
             }
