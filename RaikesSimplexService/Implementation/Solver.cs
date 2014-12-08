@@ -92,8 +92,8 @@ namespace RaikesSimplexService.DuckTheSystem
                     wloop = this.getEnteringVariable();
                     if (wloop)
                     {
-                        this.getExitingVariable();
-                        this.updateLhs(this.Entering, this.exiting);
+                        wloop = this.getExitingVariable();
+                        if(wloop) this.updateLhs(this.Entering, this.exiting);
                     }
                 }
                 twoPhase = false;
@@ -115,8 +115,8 @@ namespace RaikesSimplexService.DuckTheSystem
                 double testEntering = this.Entering;
                 if(loop)
                 {
-                    this.getExitingVariable();
-                    this.updateLhs(this.Entering, this.exiting);
+                    loop = this.getExitingVariable();
+                    if (loop) this.updateLhs(this.Entering, this.exiting);
                 }
             }
             this.sortLhs(this.lhs);
@@ -146,7 +146,7 @@ namespace RaikesSimplexService.DuckTheSystem
                 int columnNum = (int)this.lhs[i, 0];
                 if (columnNum < variables)
                 {
-                    Decisions[columnNum] = this.xBPrime[columnNum, 0];
+                    Decisions[columnNum] = this.xBPrime[i, 0];
                 }
             }
             double OptimalValue = 0;
@@ -199,11 +199,17 @@ namespace RaikesSimplexService.DuckTheSystem
 
         private void updateLhs(int entering, int exiting)
         {
-            this.lhs[exiting, 0] = entering;
             List<double> newLhs = new List<double>();
             for(int i = 0; i < this.lhs.RowCount; i++)
             {
-                newLhs.Add(this.lhs[i, 0]);
+                if ( i == exiting)
+                {
+                    newLhs.Add(entering);
+                }
+                else
+                {
+                    newLhs.Add(this.lhs[i, 0]);
+                }
             }
             newLhs = this.sort(newLhs);
             for(int i = 0; i < this.lhs.RowCount; i++)
@@ -212,7 +218,7 @@ namespace RaikesSimplexService.DuckTheSystem
             }
         }
 
-        private void getExitingVariable()
+        private bool getExitingVariable()
         {
             Matrix<double> pPrime = this.bInverse.Multiply(this.pMatrices[this.Entering]);
             double smallest = double.MaxValue;
@@ -227,7 +233,15 @@ namespace RaikesSimplexService.DuckTheSystem
                     exiting = i;
                 }
             }
-            this.exiting = exiting;
+            if(exiting >= 0)
+            {
+                this.exiting = exiting;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         private void getPMatrices()
@@ -706,7 +720,7 @@ namespace RaikesSimplexService.DuckTheSystem
             if (r.Equals(Relationship.GreaterThanOrEquals) && value != 0)
             {
                 return 1;
-            }   
+            }
             return 0;
         }
     }

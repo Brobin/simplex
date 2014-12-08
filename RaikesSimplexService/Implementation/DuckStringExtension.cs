@@ -85,11 +85,11 @@ namespace RaikesSimplexService.DuckTheSystem
             switch (relationship)
             {
                 case Relationship.GreaterThanOrEquals:
-                    return ">= ";
+                    return "\t>=\t";
                 case Relationship.LessThanOrEquals:
-                    return "<=";
+                    return "\t<=\t";
                 default:
-                    return "=";
+                    return "\t=\t";
             }
         }
 
