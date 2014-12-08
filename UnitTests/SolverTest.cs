@@ -144,7 +144,7 @@ namespace UnitTests
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
 
-        [TestMethod]
+        [TestMethod] //this works!!!!!!!!!!!!!!!!!!!!!!!!!
         public void TwoPhaseTest1()
         {
             var constraints = new List<LinearConstraint>();
@@ -216,7 +216,52 @@ namespace UnitTests
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
 
-        [TestMethod]
+        [TestMethod] //YAY x2!!!
+        public void Infeasible()
+        {
+            var constraints = new List<LinearConstraint>();
+            constraints.Add(new LinearConstraint()
+            {
+                Coefficients = new double[] { 1, 0 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 6
+            });
+            constraints.Add(new LinearConstraint()
+            {
+                Coefficients = new double[] { 0, 1 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 6
+            });
+            constraints.Add(new LinearConstraint()
+            {
+                Coefficients = new double[] { 1, 1 },
+                Relationship = Relationship.LessThanOrEquals,
+                Value = 11
+            });
+            var goal = new Goal()
+            {
+                Coefficients = new double[] { 1, 1 },
+                ConstantTerm = 0
+            };
+            var model = new Model()
+            {
+                Constraints = constraints,
+                Goal = goal,
+                GoalKind = GoalKind.Maximize
+            };
+            var solver = new Solver();
+            var actual = solver.Solve(model);
+
+            #region Print lines
+            System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+            System.Diagnostics.Debug.WriteLine(solver.DuckString());
+            System.Diagnostics.Debug.WriteLine(actual.DuckString());
+            #endregion
+
+            Assert.AreEqual(SolutionQuality.Infeasible, actual.Quality);
+        }
+
+        [TestMethod] //IT TWERKS
         public void TwoPhaseTest2()
         {
             var constraints = new List<LinearConstraint>();
@@ -288,7 +333,52 @@ namespace UnitTests
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
 
-        [TestMethod]
+        [TestMethod] 
+        public void TwoPhaseTest7()
+        {
+            var constraints = new List<LinearConstraint>();
+            constraints.Add(new LinearConstraint()
+            {
+                Coefficients = new double[] { 1, -1 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 1
+            });
+            constraints.Add(new LinearConstraint()
+            {
+                Coefficients = new double[] { 1, 1 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 2
+            });
+            var goal = new Goal()
+            {
+                Coefficients = new double[] { 1,1 },
+                ConstantTerm = 0
+            };
+            var model = new Model()
+            {
+                Constraints = constraints,
+                Goal = goal,
+                GoalKind = GoalKind.Maximize
+            };
+            var expected = new Solution()
+            {
+                Quality = SolutionQuality.Unbounded
+            };
+            var solver = new Solver();
+            var actual = solver.Solve(model);
+
+            #region Print lines
+            System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+            System.Diagnostics.Debug.WriteLine(solver.DuckString());
+            System.Diagnostics.Debug.WriteLine(actual.DuckString());
+            #endregion
+
+            CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
+            Assert.AreEqual(expected.Quality, actual.Quality);
+            Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
+        }
+
+        [TestMethod] // TWERK 4 DAYZ
         public void TwoPhaseTest3()
         {
             var constraints = new List<LinearConstraint>();
@@ -354,33 +444,31 @@ namespace UnitTests
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
 
-        [TestMethod]
-        public void TwoPhaseEqualsTest()
+        [TestMethod] //YAY!!!
+        public void TwoPhaseTest4()
         {
             var constraints = new List<LinearConstraint>();
             constraints.Add(new LinearConstraint()
             {
-                Coefficients = new double[] { 10, 5 },
+                Coefficients = new double[] { 1, 1, 1, 1 },
                 Relationship = Relationship.LessThanOrEquals,
-                Value = 50
+                Value = 40
             });
             constraints.Add(new LinearConstraint()
             {
-                Coefficients = new double[] { 6, 6 },
-                Relationship = Relationship.LessThanOrEquals,
-                //Relationship = Relationship.Equals,
-                Value = 36
+                Coefficients = new double[] { 2, 1, -1, -1 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 10
             });
             constraints.Add(new LinearConstraint()
             {
-                Coefficients = new double[] { 4.5, 18 },
-                //Relationship = Relationship.LessThanOrEquals,
-                Relationship = Relationship.Equals,
-                Value = 81
+                Coefficients = new double[] { 0, -1, 0, 1 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 10
             });
             var goal = new Goal()
             {
-                Coefficients = new double[] { 9, 7 },
+                Coefficients = new double[] { -.5, 3, 1, 4 },
                 ConstantTerm = 0
             };
             var model = new Model()
@@ -391,10 +479,10 @@ namespace UnitTests
             };
             var expected = new Solution()
             {
-                Decisions = new double[2] { 2, 4 },
+                Decisions = new double[4] { 10, 10, 0, 20 },
                 Quality = SolutionQuality.Optimal,
                 AlternateSolutionsExist = false,
-                OptimalValue = 46
+                OptimalValue = 105
             };
             var solver = new Solver();
             var actual = solver.Solve(model);
@@ -410,6 +498,60 @@ namespace UnitTests
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
 
+        [TestMethod] 
+        public void TwoPhaseTest5()
+        {
+            var constraints = new List<LinearConstraint>();
+            constraints.Add(new LinearConstraint()
+            {
+                Coefficients = new double[] { 1, 1, 1 },
+                Relationship = Relationship.LessThanOrEquals,
+                Value = 100
+            });
+            constraints.Add(new LinearConstraint()
+            {
+                Coefficients = new double[] { 1,0,0},
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 10
+            });
+            constraints.Add(new LinearConstraint()
+            {
+                Coefficients = new double[] { 0, 1, 1 },
+                Relationship = Relationship.GreaterThanOrEquals,
+                Value = 10
+            });
+            var goal = new Goal()
+            {
+                Coefficients = new double[] { 172, -45, 79 },
+                ConstantTerm = 0
+            };
+            var model = new Model()
+            {
+                Constraints = constraints,
+                Goal = goal,
+                GoalKind = GoalKind.Maximize
+            };
+            var expected = new Solution()
+            {
+                Decisions = new double[] { 90, 0, 10 },
+                Quality = SolutionQuality.Optimal,
+                AlternateSolutionsExist = false,
+                OptimalValue = 16270
+            };
+            var solver = new Solver();
+            var actual = solver.Solve(model);
+
+            #region Print lines
+            System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+            System.Diagnostics.Debug.WriteLine(solver.DuckString());
+            System.Diagnostics.Debug.WriteLine(actual.DuckString());
+            #endregion
+
+            CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
+            Assert.AreEqual(expected.Quality, actual.Quality);
+            Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
+        }
+        
         [TestMethod]
         public void SinglePhaseEqualsTest()
         {
@@ -429,7 +571,7 @@ namespace UnitTests
             });
             constraints.Add(new LinearConstraint()
             {
-                Coefficients = new double[] { 4.5, 18 },
+                Coefficients = new double[] { 4.5, 22 },
                 //Relationship = Relationship.LessThanOrEquals,
                 Relationship = Relationship.Equals,
                 Value = 81
@@ -458,6 +600,7 @@ namespace UnitTests
             #region Print lines
             System.Diagnostics.Debug.WriteLine(model.DuckString(true));
             System.Diagnostics.Debug.WriteLine(solver.DuckString());
+            System.Diagnostics.Debug.WriteLine(solver.modelMatrix.ToString());
             System.Diagnostics.Debug.WriteLine(actual.DuckString());
             #endregion
 
@@ -466,15 +609,16 @@ namespace UnitTests
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
 
-        [TestMethod]
-        public void SinglePhaseNormalTest()
+        [TestMethod] //this one works
+        public void SinglePhaseEqualsTest2()
         {
             var constraints = new List<LinearConstraint>();
             constraints.Add(new LinearConstraint()
             {
                 Coefficients = new double[] { 1, 1 },
-                Relationship = Relationship.LessThanOrEquals,
-                Value = 35
+                //Relationship = Relationship.LessThanOrEquals,
+                Relationship = Relationship.Equals,
+                Value = 25
             });
             constraints.Add(new LinearConstraint()
             {
@@ -520,7 +664,7 @@ namespace UnitTests
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
        
-        [TestMethod]
+        [TestMethod] //this one works
         public void SinglePhaseMinimizeTest()
         {
 
@@ -565,15 +709,19 @@ namespace UnitTests
 
             var expected = new Solution()
             {
-                Decisions = new double[2] { 14, 4 },
+                Decisions = new double[2] { 0, 0 },
                 Quality = SolutionQuality.Optimal,
                 AlternateSolutionsExist = false,
-                OptimalValue = 1400
+                OptimalValue = 0
             };
             #endregion
 
             //Act
-            var actual = target.Solve(model);
+            var actual = target.Solve(model); 
+            
+            System.Diagnostics.Debug.WriteLine(model.DuckString(true));
+            System.Diagnostics.Debug.WriteLine(target.DuckString());
+            System.Diagnostics.Debug.WriteLine(actual.DuckString());
 
             //Assert
             CollectionAssert.AreEqual(expected.Decisions, actual.Decisions);
@@ -581,7 +729,7 @@ namespace UnitTests
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
         
-        [TestMethod]
+        [TestMethod] //this one works
         public void SinglePhaseMinimizeTest2()
         {
             #region Test3
@@ -612,7 +760,7 @@ namespace UnitTests
 
             var goal = new Goal()
             {
-                Coefficients = new double[2] { 350, 450 },
+                Coefficients = new double[2] { 350, -450 },
                 ConstantTerm = 0
             };
 
@@ -625,10 +773,10 @@ namespace UnitTests
 
             var expected = new Solution()
             {
-                Decisions = new double[2] { 12, 13 },
+                Decisions = new double[2] { 0, 19 },
                 Quality = SolutionQuality.Optimal,
                 AlternateSolutionsExist = false,
-                OptimalValue = 10050
+                OptimalValue = -8550
             };
             #endregion
 
@@ -641,7 +789,7 @@ namespace UnitTests
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
 
-        [TestMethod()]
+        [TestMethod()] //this one works
         public void SinglePhaseMinimizeTest3()
         {
             #region Test3
@@ -665,7 +813,7 @@ namespace UnitTests
 
             var goal = new Goal()
             {
-                Coefficients = new double[2] { 3, 9 },
+                Coefficients = new double[2] { -3, 9 },
                 ConstantTerm = 0
             };
 
@@ -678,10 +826,10 @@ namespace UnitTests
 
             var expected = new Solution()
             {
-                Decisions = new double[2] { 8, 4 },
+                Decisions = new double[2] { 16, 0 },
                 Quality = SolutionQuality.Optimal,
                 AlternateSolutionsExist = false,
-                OptimalValue = 60
+                OptimalValue = -48
             };
             #endregion
 
@@ -694,7 +842,7 @@ namespace UnitTests
             Assert.AreEqual(expected.AlternateSolutionsExist, actual.AlternateSolutionsExist);
         }
 
-        [TestMethod()]
+        [TestMethod()] //this one works
         public void SinglePhaseMinimizeTest4()
         {
             #region Arrange
@@ -702,7 +850,7 @@ namespace UnitTests
 
             var lc1 = new LinearConstraint()
             {
-                Coefficients = new double[2] { -1, 2 },
+                Coefficients = new double[2] { -1, -2 },
                 Relationship = Relationship.LessThanOrEquals,
                 Value = 36
             };
@@ -730,7 +878,7 @@ namespace UnitTests
 
             var lc5 = new LinearConstraint()
             {
-                Coefficients = new double[2] { 6, 1 },
+                Coefficients = new double[2] { 6, -1 },
                 Relationship = Relationship.LessThanOrEquals,
                 Value = 132
             };
@@ -746,10 +894,10 @@ namespace UnitTests
 
             var goal = new Goal()
             {
-                Coefficients = new double[2] { 10, 10 },
+                Coefficients = new double[2] { -10, -10 },
                 ConstantTerm = 0
             };
-
+            #endregion
             var model = new Model()
             {
                 Constraints = constraints,
@@ -762,10 +910,10 @@ namespace UnitTests
                 Decisions = new double[2] { 17, 17 },
                 Quality = SolutionQuality.Optimal,
                 AlternateSolutionsExist = false,
-                OptimalValue = 340
+                OptimalValue = -340
             };
         }
-            #endregion
+           
     }
 
 

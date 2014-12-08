@@ -37,6 +37,9 @@ namespace RaikesSimplexService.DuckTheSystem
         public int exiting;
         public Solution solution;
         public bool twoPhase;
+        public Boolean[] AVariable;
+        private bool infeasible;
+        private bool unbounded;
 
 
 
@@ -47,8 +50,19 @@ namespace RaikesSimplexService.DuckTheSystem
         /// <param name="model"></param>
         private void SetUpModel(Model model)
         {
+            
             this.model = this.removeUnnecessaryConstraints(model);
+            bool equals = this.checkForEquals(this.model);
             this.AddSlackSurplusVariables();
+            if(equals) this.checkForDuplicateConstraint();
+            else
+            {
+                AVariable = new Boolean[model.Constraints.Count];
+                for (int i = 0; i < model.Constraints.Count; i++ )
+                {
+                    AVariable[i] = true;
+                }
+            }
             this.AddArtificialVariables();
             if (aVariables > 0)
             {
@@ -61,6 +75,28 @@ namespace RaikesSimplexService.DuckTheSystem
             this.createLhs();
         }
 
+        private bool checkForEquals(Model model)
+        {
+            bool equals = false;
+            for (int i = 0; i < this.model.Constraints.Count; i++ )
+            {
+                var c = this.model.Constraints[i];
+                if (c.Relationship.Equals(Relationship.Equals))
+                {
+                    c.Relationship = Relationship.LessThanOrEquals;
+                    LinearConstraint newC = new LinearConstraint()
+                    {
+                        Coefficients = c.Coefficients,
+                        Relationship = Relationship.GreaterThanOrEquals,
+                        Value = c.Value
+                    };
+                    equals = true;
+                    this.model.Constraints.Add(newC);
+                }
+            }
+            return equals;
+        }
+
         /// <summary>
         /// Runs the simplex algorithm to find an optimal solution for a 
         /// given model
@@ -70,6 +106,7 @@ namespace RaikesSimplexService.DuckTheSystem
         public Solution Solve(Model model)
         {
             this.SetUpModel(model);
+            this.unbounded = false;
             if (twoPhase)
             {
     //FIRST SHIT
@@ -93,33 +130,50 @@ namespace RaikesSimplexService.DuckTheSystem
                     if (wloop)
                     {
                         wloop = this.getExitingVariable();
-                        if(wloop) this.updateLhs(this.Entering, this.exiting);
+                        if (wloop)
+                        {
+                            this.updateLhs(this.Entering, this.exiting);
+                        }
+                        else
+                        {
+                            this.unbounded = true;
+                        }
                     }
                 }
                 twoPhase = false;
                 this.extractZRowAndColumn();
                 this.getNewModelMatrix();
-                this.createLhs();
+                this.getNewLhs();
             }
     //SECOND SHIT
-            twoPhase = false;
-            bool loop = true;
-            while(loop)
+            if (!this.infeasible && !this.unbounded)
             {
-                this.createBMatrixAndZVector();
-                this.bInverse = this.bMatrix.Inverse();
-                this.xBPrime = this.bInverse.Multiply(this.rhs);
-                this.getPMatrices();
-                this.zVectorXPMatrix();
-                loop = this.getEnteringVariable();
-                double testEntering = this.Entering;
-                if(loop)
+                twoPhase = false;
+                bool loop = true;
+                while (loop)
                 {
-                    loop = this.getExitingVariable();
-                    if (loop) this.updateLhs(this.Entering, this.exiting);
+                    this.createBMatrixAndZVector();
+                    this.bInverse = this.bMatrix.Inverse();
+                    this.xBPrime = this.bInverse.Multiply(this.rhs);
+                    this.getPMatrices();
+                    this.zVectorXPMatrix();
+                    loop = this.getEnteringVariable();
+                    double testEntering = this.Entering;
+                    if (loop)
+                    {
+                        loop = this.getExitingVariable();
+                        if (loop)
+                        {
+                            this.updateLhs(this.Entering, this.exiting);
+                        }
+                        else
+                        {
+                            this.unbounded = true;
+                        }
+                    }
                 }
+                this.sortLhs(this.lhs);
             }
-            this.sortLhs(this.lhs);
             this.solution = this.compileSolution();
 
             // 3. For each non basic variable
@@ -155,14 +209,55 @@ namespace RaikesSimplexService.DuckTheSystem
             {
                 OptimalValue += Decisions[j] * coeff[j];
             }
-
+            if (this.model.GoalKind.Equals(GoalKind.Minimize))
+            {
+                OptimalValue = OptimalValue * (-1);
+            }
+            var Quality = SolutionQuality.Optimal;
+            if (infeasible)
+            {
+                Quality = SolutionQuality.Infeasible;
+            }
+            else if (unbounded)
+            {
+                Quality = SolutionQuality.Unbounded;
+            }
             Solution solution = new Solution(){
                 Decisions = Decisions,
                 OptimalValue = OptimalValue,
                 AlternateSolutionsExist = false,
-                Quality = SolutionQuality.Optimal
+                Quality = Quality
             };
             return solution;
+        }
+
+        private bool checkForInfeasability()
+        {
+            int highestIndex = this.model.Constraints.Count + this.sVariables - 1;
+            for (int i = 0; i < this.lhs.RowCount; i++)
+            {
+                if (this.lhs[i, 0] > highestIndex)
+                {
+                    this.infeasible = true;
+                    return true;
+                }
+            }
+            this.infeasible = false;
+            return false;
+        }
+
+        private void getNewLhs()
+        {
+            
+            double[,] newLHS = new double[this.lhs.RowCount - 1, 1];
+            for (int i = 1; i < this.lhs.RowCount; i++)
+            {
+                var x = this.lhs[i, 0] - 1;
+                newLHS[i-1, 0] = x;
+            }
+            this.lhs = Matrix<double>.Build.DenseOfArray(newLHS);
+            //this.lhs = this.lhs.RemoveRow(current);
+            this.checkForInfeasability();
         }
 
 
@@ -418,8 +513,9 @@ namespace RaikesSimplexService.DuckTheSystem
         {
             this.aVariables = this.countAVariables();
             var aUsed = 0;
-            foreach (var c in model.Constraints)
+            for (int k = 0; k < model.Constraints.Count; k++)
             {
+                var c = this.model.Constraints[k];
                 var size = c.Coefficients.Length;
                 double[] equality = new double[size + this.aVariables];
                 for (int i = 0; i < size; i++)
@@ -433,7 +529,7 @@ namespace RaikesSimplexService.DuckTheSystem
                     switch (c.Relationship)
                     {
                         case Relationship.GreaterThanOrEquals:
-                            if (!complete && j >= size + aUsed)
+                            if (!complete && j >= size + aUsed && this.AVariable[k] )
                             {
                                 equality[j] = a;
                                 complete = true;
@@ -467,9 +563,10 @@ namespace RaikesSimplexService.DuckTheSystem
         /// <returns></returns>
         private int countAVariables(){
             int size = 0;
-            foreach (var c in this.model.Constraints)
+            for (int i = 0; i < this.model.Constraints.Count; i++ )
             {
-                if (this.getAValue(c.Relationship, c.Value) != 0)
+                var c = this.model.Constraints[i];
+                if (this.getAValue(c.Relationship, c.Value) != 0 && this.AVariable[i])
                     size++;
             }
             return size;
@@ -588,6 +685,7 @@ namespace RaikesSimplexService.DuckTheSystem
         /// <returns></returns>
         public void createLhs()
         {
+            double current = 100;
             int cons = this.modelMatrix.RowCount;
             double[,] lhs = new double[cons,1];
             int size = modelMatrix.ColumnCount;
@@ -595,9 +693,9 @@ namespace RaikesSimplexService.DuckTheSystem
             {
                 for(int columns = 0; columns < size; columns++)
                 {
-                    var current = modelMatrix[rows, columns];
+                    current = modelMatrix[rows, columns];
                     var found = false;
-                    if(current == 1 || (!twoPhase && current == -1))
+                    if(current == 1 || current == -1)
                     {
                         found = true;
                         int k = 0;
@@ -616,7 +714,6 @@ namespace RaikesSimplexService.DuckTheSystem
                     }
                     if (found) {
                         lhs[rows, 0] = columns;
-                        break;
                     }
                 }
             }
@@ -722,6 +819,35 @@ namespace RaikesSimplexService.DuckTheSystem
                 return 1;
             }
             return 0;
+        }
+
+        private void checkForDuplicateConstraint()
+        {
+            Boolean[] AVariable = new Boolean[this.model.Constraints.Count];
+            for (int j = 0; j < model.Constraints.Count - 1; j++ )
+            {
+                int count = 0;
+                for (int i = 0; i < model.Constraints[0].Coefficients.Length - sVariables; i++)
+                {
+                    for (int w = 0; w < model.Constraints.Count; w++ )
+                    {
+                        if (model.Constraints[j].Coefficients[i] == model.Constraints[w].Coefficients[i] && 
+                            model.Constraints[w].Relationship.Equals(Relationship.GreaterThanOrEquals) && j != w)
+                        {
+                            count++;
+                        }
+                    }
+                }
+                if (count == model.Constraints[0].Coefficients.Length - sVariables)
+                {
+                    AVariable[j] = false;
+                }
+                else
+                {
+                    AVariable[j] = true;
+                }
+            }
+            this.AVariable = AVariable;
         }
     }
 }
