@@ -36,6 +36,10 @@ namespace RaikesSimplexService.DuckTheSystem
         public int Entering;
         public int exiting;
         public Solution solution;
+        public bool twoPhase;
+        public Boolean[] AVariable;
+        private bool infeasible;
+        private bool unbounded;
 
 
 
@@ -46,14 +50,51 @@ namespace RaikesSimplexService.DuckTheSystem
         /// <param name="model"></param>
         private void SetUpModel(Model model)
         {
+            
             this.model = this.removeUnnecessaryConstraints(model);
+            bool equals = this.checkForEquals(this.model);
             this.AddSlackSurplusVariables();
+            if(equals) this.checkForDuplicateConstraint();
+            else
+            {
+                AVariable = new Boolean[model.Constraints.Count];
+                for (int i = 0; i < model.Constraints.Count; i++ )
+                {
+                    AVariable[i] = true;
+                }
+            }
             this.AddArtificialVariables();
+            if (aVariables > 0)
+            {
+                this.twoPhase = true;
+            }
             this.createZRow();
             this.createModelMatrix();
             this.createWRow();
             this.createRhs();
             this.createLhs();
+        }
+
+        private bool checkForEquals(Model model)
+        {
+            bool equals = false;
+            for (int i = 0; i < this.model.Constraints.Count; i++ )
+            {
+                var c = this.model.Constraints[i];
+                if (c.Relationship.Equals(Relationship.Equals))
+                {
+                    c.Relationship = Relationship.LessThanOrEquals;
+                    LinearConstraint newC = new LinearConstraint()
+                    {
+                        Coefficients = c.Coefficients,
+                        Relationship = Relationship.GreaterThanOrEquals,
+                        Value = c.Value
+                    };
+                    equals = true;
+                    this.model.Constraints.Add(newC);
+                }
+            }
+            return equals;
         }
 
         /// <summary>
@@ -65,7 +106,8 @@ namespace RaikesSimplexService.DuckTheSystem
         public Solution Solve(Model model)
         {
             this.SetUpModel(model);
-            if (aVariables != 0)
+            this.unbounded = false;
+            if (twoPhase)
             {
     //FIRST SHIT
                 //do shit
@@ -73,6 +115,10 @@ namespace RaikesSimplexService.DuckTheSystem
                 this.zRow = this.wRow;
                 //solve using wrow
                 bool wloop = true;
+
+                System.Diagnostics.Debug.WriteLine(this.modelMatrix.ToString());
+                System.Diagnostics.Debug.WriteLine(this.rhs.ToString());
+                System.Diagnostics.Debug.WriteLine(this.zRow.ToString());
                 while (wloop)
                 {
                     this.createBMatrixAndZVector();
@@ -83,32 +129,51 @@ namespace RaikesSimplexService.DuckTheSystem
                     wloop = this.getEnteringVariable();
                     if (wloop)
                     {
-                        this.getExitingVariable();
-                        this.updateLhs(this.Entering, this.exiting);
+                        wloop = this.getExitingVariable();
+                        if (wloop)
+                        {
+                            this.updateLhs(this.Entering, this.exiting);
+                        }
+                        else
+                        {
+                            this.unbounded = true;
+                        }
                     }
                 }
-                this.extractZRow();
+                twoPhase = false;
+                this.extractZRowAndColumn();
                 this.getNewModelMatrix();
-                this.getNewLHS();
-                this.getNewRHS();
+                this.getNewLhs();
             }
     //SECOND SHIT
-            bool loop = true;
-            while(loop)
+            if (!this.infeasible && !this.unbounded)
             {
-                this.createBMatrixAndZVector();
-                this.bInverse = this.bMatrix.Inverse();
-                this.xBPrime = this.bInverse.Multiply(this.rhs);
-                this.getPMatrices();
-                this.zVectorXPMatrix();
-                loop = this.getEnteringVariable();
-                if(loop)
+                twoPhase = false;
+                bool loop = true;
+                while (loop)
                 {
-                    this.getExitingVariable();
-                    this.updateLhs(this.Entering, this.exiting);
+                    this.createBMatrixAndZVector();
+                    this.bInverse = this.bMatrix.Inverse();
+                    this.xBPrime = this.bInverse.Multiply(this.rhs);
+                    this.getPMatrices();
+                    this.zVectorXPMatrix();
+                    loop = this.getEnteringVariable();
+                    double testEntering = this.Entering;
+                    if (loop)
+                    {
+                        loop = this.getExitingVariable();
+                        if (loop)
+                        {
+                            this.updateLhs(this.Entering, this.exiting);
+                        }
+                        else
+                        {
+                            this.unbounded = true;
+                        }
+                    }
                 }
+                this.sortLhs(this.lhs);
             }
-
             this.solution = this.compileSolution();
 
             // 3. For each non basic variable
@@ -122,22 +187,20 @@ namespace RaikesSimplexService.DuckTheSystem
                 // (Xb' / Pn') * B'
 
             // repeat 2-5 until no negative values are in the z row
-            return null;
+            return this.solution;
         }
 
         private Solution compileSolution()
         {
             int variables = this.modelMatrix.ColumnCount - this.sVariables;
-            //double[] Decisions = new double[variables];
-            //for(int i = 0; i < variables; i++)
             int constraints = this.modelMatrix.RowCount;
             double[] Decisions = new double[variables];
             for (int i = 0; i < constraints; i++)
             {
                 int columnNum = (int)this.lhs[i, 0];
-                if (columnNum < variables) {
-                    //its switching x and y for some reason
-                    Decisions[columnNum] = this.xBPrime[columnNum, 0];
+                if (columnNum < variables)
+                {
+                    Decisions[columnNum] = this.xBPrime[i, 0];
                 }
             }
             double OptimalValue = 0;
@@ -146,60 +209,111 @@ namespace RaikesSimplexService.DuckTheSystem
             {
                 OptimalValue += Decisions[j] * coeff[j];
             }
-
+            if (this.model.GoalKind.Equals(GoalKind.Minimize))
+            {
+                OptimalValue = OptimalValue * (-1);
+            }
+            var Quality = SolutionQuality.Optimal;
+            if (infeasible)
+            {
+                Quality = SolutionQuality.Infeasible;
+            }
+            else if (unbounded)
+            {
+                Quality = SolutionQuality.Unbounded;
+            }
             Solution solution = new Solution(){
                 Decisions = Decisions,
                 OptimalValue = OptimalValue,
                 AlternateSolutionsExist = false,
-                Quality = SolutionQuality.Optimal
+                Quality = Quality
             };
             return solution;
         }
 
-
-        private void extractZRow()
+        private bool checkForInfeasability()
         {
-            int length = modelMatrix.ColumnCount - aVariables;
+            int highestIndex = this.model.Constraints.Count + this.sVariables - 1;
+            for (int i = 0; i < this.lhs.RowCount; i++)
+            {
+                if (this.lhs[i, 0] > highestIndex)
+                {
+                    this.infeasible = true;
+                    return true;
+                }
+            }
+            this.infeasible = false;
+            return false;
+        }
+
+        private void getNewLhs()
+        {
+            
+            double[,] newLHS = new double[this.lhs.RowCount - 1, 1];
+            for (int i = 1; i < this.lhs.RowCount; i++)
+            {
+                var x = this.lhs[i, 0] - 1;
+                newLHS[i-1, 0] = x;
+            }
+            this.lhs = Matrix<double>.Build.DenseOfArray(newLHS);
+            //this.lhs = this.lhs.RemoveRow(current);
+            this.checkForInfeasability();
+        }
+
+
+        private void extractZRowAndColumn()
+        {
+            int length = modelMatrix.ColumnCount - aVariables -1;
             int depth = model.Constraints.Count;
             double[,] newZRow = new double[1, length];
-            for (int i = 0; i < length; i++)
+            for (int i = 1; i < length+1; i++)
             {
-                newZRow[0, i] = this.modelMatrix[depth, i];
+                newZRow[0, i-1] = this.modelMatrix[depth, i];
             }
+            this.modelMatrix.RemoveColumn(0);
             this.zRow = Matrix<double>.Build.DenseOfArray(newZRow);
         }
 
         private void getNewModelMatrix()
         {
-            //remove last row and artificial variables
-            int length = this.modelMatrix.ColumnCount - aVariables;
-            int depth = this.model.Constraints.Count;
-            double[,] newModelMatrix = new double[depth, length];
-            for (int i = 0; i < length; i++)
+            var length = this.modelMatrix.ColumnCount - 1 - aVariables;
+            var depth = this.modelMatrix.RowCount - 1;
+            double[,] newMatrix = new double[depth, length];
+            double[,] newRhs = new double[depth, 1];
+            for (int i = 0; i < depth; i++ )
             {
-                for (int j = 0; j < depth; j++)
+                for(int j = 1; j < length+1; j++)
                 {
-                    newModelMatrix[j, i] = this.modelMatrix[j, i];
+                    newMatrix[i,j-1] = this.modelMatrix[i,j];
                 }
+                newRhs[i, 0] = this.rhs[i, 0];
             }
-            this.modelMatrix = Matrix<double>.Build.DenseOfArray(newModelMatrix);
-        }
-
-        private void getNewLHS() {
-            this.lhs = this.lhs.RemoveRow(this.lhs.RowCount - 1);
-        }
-
-        private void getNewRHS()
-        {
-            this.rhs = this.rhs.RemoveRow(this.rhs.RowCount - 1);
+            this.modelMatrix = Matrix<double>.Build.DenseOfArray(newMatrix);
+            this.rhs = Matrix<double>.Build.DenseOfArray(newRhs);
         }
 
         private void updateLhs(int entering, int exiting)
         {
-            this.lhs[exiting, 0] = entering;
+            List<double> newLhs = new List<double>();
+            for(int i = 0; i < this.lhs.RowCount; i++)
+            {
+                if ( i == exiting)
+                {
+                    newLhs.Add(entering);
+                }
+                else
+                {
+                    newLhs.Add(this.lhs[i, 0]);
+                }
+            }
+            newLhs = this.sort(newLhs);
+            for(int i = 0; i < this.lhs.RowCount; i++)
+            {
+                this.lhs[i, 0] = newLhs.ElementAt(i);
+            }
         }
 
-        private void getExitingVariable()
+        private bool getExitingVariable()
         {
             Matrix<double> pPrime = this.bInverse.Multiply(this.pMatrices[this.Entering]);
             double smallest = double.MaxValue;
@@ -214,7 +328,15 @@ namespace RaikesSimplexService.DuckTheSystem
                     exiting = i;
                 }
             }
-            this.exiting = exiting;
+            if(exiting >= 0)
+            {
+                this.exiting = exiting;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         private void getPMatrices()
@@ -246,6 +368,48 @@ namespace RaikesSimplexService.DuckTheSystem
             }
         }
 
+        private void sortLhs(Matrix<double> lhs)
+        {
+            List<double> array = new List<double>();
+            for (int i = 0; i < lhs.RowCount; i++)
+            {
+                array.Add(lhs[i, 0]);
+            }
+            array = this.sort(array);
+            for (int i = 0; i < lhs.RowCount; i++)
+            {
+                lhs[i, 0] = array.ElementAt(i);
+            }
+            this.lhs = lhs;
+        }
+
+        private List<double> sort(List<double> array)
+        {
+            var rand = new Random();
+            if (array.Count > 1)
+            {
+                List<double> less = new List<double>();
+                List<double> equal = new List<double>();
+                List<double> greater = new List<double>();
+
+                int pivot = rand.Next(0, array.Count - 1);
+                double pivotValue = array[pivot];
+
+                foreach (double a in array)
+                {
+                    if (a < pivotValue)
+                        less.Add(a);
+                    else if (a == pivotValue)
+                        equal.Add(a);
+                    else if (a > pivotValue)
+                        greater.Add(a);
+                }
+                less = this.sort(less);
+                greater = this.sort(greater);
+                return less.Concat(equal).Concat(greater).ToList();
+            }
+            return array;
+        }
 
         private void createBMatrixAndZVector()
         {
@@ -253,10 +417,8 @@ namespace RaikesSimplexService.DuckTheSystem
             int down = this.modelMatrix.RowCount;
             double[,] bMatrix2 = new double[down, across];
             double[,] z = new double[1, across];
-
             for (int i = 0; i < across; i++)
             {
-                
                 int lhsValue = (int)lhs[i,0];
                 var value = this.zRow[0, lhsValue];
                 z[0, i] = value;
@@ -291,6 +453,7 @@ namespace RaikesSimplexService.DuckTheSystem
             {
                 lhsValues.Add(lhs[i, 0]);
             }
+            System.Diagnostics.Debug.WriteLine(this.lhs.ToString());
             for (int i = 0; i < this.modelMatrix.ColumnCount-aVariables; i++)
             {
                 if(!lhsValues.Contains(i)){
@@ -350,8 +513,9 @@ namespace RaikesSimplexService.DuckTheSystem
         {
             this.aVariables = this.countAVariables();
             var aUsed = 0;
-            foreach (var c in model.Constraints)
+            for (int k = 0; k < model.Constraints.Count; k++)
             {
+                var c = this.model.Constraints[k];
                 var size = c.Coefficients.Length;
                 double[] equality = new double[size + this.aVariables];
                 for (int i = 0; i < size; i++)
@@ -365,7 +529,7 @@ namespace RaikesSimplexService.DuckTheSystem
                     switch (c.Relationship)
                     {
                         case Relationship.GreaterThanOrEquals:
-                            if (!complete && j >= size + aUsed)
+                            if (!complete && j >= size + aUsed && this.AVariable[k] )
                             {
                                 equality[j] = a;
                                 complete = true;
@@ -399,9 +563,10 @@ namespace RaikesSimplexService.DuckTheSystem
         /// <returns></returns>
         private int countAVariables(){
             int size = 0;
-            foreach (var c in this.model.Constraints)
+            for (int i = 0; i < this.model.Constraints.Count; i++ )
             {
-                if (this.getAValue(c.Relationship, c.Value) != 0)
+                var c = this.model.Constraints[i];
+                if (this.getAValue(c.Relationship, c.Value) != 0 && this.AVariable[i])
                     size++;
             }
             return size;
@@ -431,38 +596,59 @@ namespace RaikesSimplexService.DuckTheSystem
 
 
         }
-        
-        public void createModelMatrix()
+
+        private void twoPhaseModelMatrix()
         {
             int lengthOfConstraint = this.model.Constraints[0].Coefficients.Length;
             int NumberofConstraints = this.model.Constraints.Count;
-            double[,] modelMatrix2;
-            if(aVariables!= 0){
-                modelMatrix2 = new double[NumberofConstraints+1, lengthOfConstraint];
-            } else {
-                modelMatrix2 = new double[NumberofConstraints, lengthOfConstraint];
-            }
+            double[,] modelMatrix2 = new double[NumberofConstraints+1, lengthOfConstraint+1];
             var zCount = 0;
+            for (int i = 1; i < lengthOfConstraint+1; i++)
+            {
+                for (int j = 0; j < NumberofConstraints; j++)
+                {
+                    modelMatrix2[j, i] = this.model.Constraints[j].Coefficients[i-1];
+                }
+                if (zCount < lengthOfConstraint - aVariables)
+                {
+                    modelMatrix2[NumberofConstraints, i] = this.zRow[0, i-1];
+                    zCount++;
+                }
+                else
+                {
+                    modelMatrix2[NumberofConstraints, i] = 0;
+                }
+            }
+            for (int i = 0; i < NumberofConstraints; i++)
+            {
+                modelMatrix2[i, 0] = 0;
+            }
+            modelMatrix2[NumberofConstraints, 0] = 1;
+            this.modelMatrix = Matrix<double>.Build.DenseOfArray(modelMatrix2);
+        }
+
+        private void singlePhaseModelMatrix()
+        {
+            int lengthOfConstraint = this.model.Constraints[0].Coefficients.Length;
+            int NumberofConstraints = this.model.Constraints.Count;
+            double[,] modelMatrix2 = new double[NumberofConstraints, lengthOfConstraint];
             for (int i = 0; i < lengthOfConstraint; i++)
             {
                 for (int j = 0; j < NumberofConstraints; j++)
                 {
                     modelMatrix2[j, i] = this.model.Constraints[j].Coefficients[i];
                 }
-                if(aVariables != 0)
-                {
-                    if (zCount < lengthOfConstraint - aVariables)
-                    {
-                        modelMatrix2[NumberofConstraints, i] = this.zRow[0, i];
-                        zCount++;
-                    }
-                    else
-                    {
-                        modelMatrix2[NumberofConstraints, i] = 0;
-                    }
-                }
             }
             this.modelMatrix = Matrix<double>.Build.DenseOfArray(modelMatrix2);
+        }
+        
+        public void createModelMatrix()
+        {
+            if(aVariables!= 0){
+                this.twoPhaseModelMatrix();
+            } else {
+                this.singlePhaseModelMatrix();
+            }
         }
         /// <summary>
         /// Creates the W Row for the first phase of the two phase simplex method
@@ -499,6 +685,7 @@ namespace RaikesSimplexService.DuckTheSystem
         /// <returns></returns>
         public void createLhs()
         {
+            double current = 100;
             int cons = this.modelMatrix.RowCount;
             double[,] lhs = new double[cons,1];
             int size = modelMatrix.ColumnCount;
@@ -506,7 +693,7 @@ namespace RaikesSimplexService.DuckTheSystem
             {
                 for(int columns = 0; columns < size; columns++)
                 {
-                    var current = modelMatrix[rows, columns];
+                    current = modelMatrix[rows, columns];
                     var found = false;
                     if(current == 1 || current == -1)
                     {
@@ -527,11 +714,11 @@ namespace RaikesSimplexService.DuckTheSystem
                     }
                     if (found) {
                         lhs[rows, 0] = columns;
-                        break;
                     }
                 }
             }
-            this.lhs = Matrix<double>.Build.DenseOfArray(lhs); 
+            var x = Matrix<double>.Build.DenseOfArray(lhs);
+            this.sortLhs(x);
         }
 
         /// <summary>
@@ -539,13 +726,23 @@ namespace RaikesSimplexService.DuckTheSystem
         /// </summary>
         public void createRhs()
         {
-            double[,] rhs = new double[this.modelMatrix.RowCount,1];
-            for (int i = 0; i < this.modelMatrix.RowCount; i++ ) {
-                if(aVariables != 0 && i == this.modelMatrix.RowCount - 1)
+            int length = this.model.Constraints.Count;
+            if (twoPhase)
+            {
+                length += 1;
+            }
+            double[,] rhs = new double[length,1];
+            if (twoPhase)
+            {
+                for (int i = 0; i < length - 1; i++)
                 {
-                    rhs[i, 0] = 0;
+                    rhs[i, 0] = this.model.Constraints[i].Value;
                 }
-                else
+                rhs[length - 1, 0] = 0;
+            }
+            else
+            {
+                for (int i = 0; i < length; i++)
                 {
                     rhs[i, 0] = this.model.Constraints[i].Value;
                 }
@@ -620,8 +817,37 @@ namespace RaikesSimplexService.DuckTheSystem
             if (r.Equals(Relationship.GreaterThanOrEquals) && value != 0)
             {
                 return 1;
-            }   
+            }
             return 0;
+        }
+
+        private void checkForDuplicateConstraint()
+        {
+            Boolean[] AVariable = new Boolean[this.model.Constraints.Count];
+            for (int j = 0; j < model.Constraints.Count - 1; j++ )
+            {
+                int count = 0;
+                for (int i = 0; i < model.Constraints[0].Coefficients.Length - sVariables; i++)
+                {
+                    for (int w = 0; w < model.Constraints.Count; w++ )
+                    {
+                        if (model.Constraints[j].Coefficients[i] == model.Constraints[w].Coefficients[i] && 
+                            model.Constraints[w].Relationship.Equals(Relationship.GreaterThanOrEquals) && j != w)
+                        {
+                            count++;
+                        }
+                    }
+                }
+                if (count == model.Constraints[0].Coefficients.Length - sVariables)
+                {
+                    AVariable[j] = false;
+                }
+                else
+                {
+                    AVariable[j] = true;
+                }
+            }
+            this.AVariable = AVariable;
         }
     }
 }
